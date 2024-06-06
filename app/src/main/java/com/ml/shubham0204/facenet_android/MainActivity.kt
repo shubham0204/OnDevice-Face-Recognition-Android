@@ -22,21 +22,14 @@ class MainActivity : ComponentActivity() {
             val navHostController = rememberNavController()
             NavHost(
                 navController = navHostController,
-                startDestination = "chat",
+                startDestination = "detect",
                 enterTransition = { fadeIn() },
                 exitTransition = { fadeOut() }
             ) {
-                composable("add-face") {
-                    AddFaceScreen()
-                }
-                composable("detect") {
-                    DetectScreen()
-                }
-                composable("face-list"){
-                    FaceListScreen()
-                }
+                composable("add-face") { AddFaceScreen() }
+                composable("detect") { DetectScreen() }
+                composable("face-list") { FaceListScreen() }
             }
         }
     }
-
 }
