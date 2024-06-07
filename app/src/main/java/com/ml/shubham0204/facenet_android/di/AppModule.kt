@@ -1,7 +1,9 @@
 package com.ml.shubham0204.facenet_android.di
 
+import android.app.Application
 import com.ml.shubham0204.facenet_android.data.ImagesVectorDB
 import com.ml.shubham0204.facenet_android.data.PersonDB
+import com.ml.shubham0204.facenet_android.domain.embeddings.FaceNet
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -28,4 +30,11 @@ object AppModule {
     fun providePersonDB(): PersonDB {
         return PersonDB()
     }
+
+    @Provides
+    @Singleton
+    fun provideFaceNetEmbeddingModel(context: Application): FaceNet {
+        return FaceNet(context)
+    }
+
 }

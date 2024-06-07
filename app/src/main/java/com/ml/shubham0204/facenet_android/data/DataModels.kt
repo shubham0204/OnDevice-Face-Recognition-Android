@@ -7,15 +7,15 @@ import io.objectbox.annotation.Index
 
 @Entity
 data class FaceImageRecord(
-    @Id var recordId: Long = 0,
-    @Index var personId: Long = 0,
+    @Id var recordID: Long = 0,
+    @Index var personID: Long = 0,
     var personName: String = "",
     @HnswIndex(dimensions = 128) var faceEmbedding: FloatArray = floatArrayOf()
 )
 
 @Entity
 data class PersonRecord(
-    @Id var personId: Long = 0,
+    @Id var personID: Long = 0,
     var personName: String = "",
     var numImages: Long = 0
 )

@@ -4,32 +4,32 @@
   "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
   "entities": [
     {
-      "id": "1:6135831998136055160",
-      "lastPropertyId": "4:4230218697907946329",
+      "id": "1:7886976431312498614",
+      "lastPropertyId": "4:1044002615928688033",
       "name": "FaceImageRecord",
       "properties": [
         {
-          "id": "1:6025611872448641994",
-          "name": "recordId",
+          "id": "1:6533718932659133037",
+          "name": "recordID",
           "type": 6,
           "flags": 1
         },
         {
-          "id": "2:2142117191513489242",
-          "name": "personId",
-          "indexId": "1:6614625589574190100",
+          "id": "2:1879665807004012985",
+          "name": "personID",
+          "indexId": "1:4574755327814671272",
           "type": 6,
           "flags": 8
         },
         {
-          "id": "3:4810003770564271647",
+          "id": "3:3883179078775366301",
           "name": "personName",
           "type": 9
         },
         {
-          "id": "4:4230218697907946329",
+          "id": "4:1044002615928688033",
           "name": "faceEmbedding",
-          "indexId": "2:5906889326038115236",
+          "indexId": "2:1210613089703466990",
           "type": 28,
           "flags": 8
         }
@@ -37,27 +37,32 @@
       "relations": []
     },
     {
-      "id": "2:5511861186785408209",
-      "lastPropertyId": "2:1233840069351220404",
+      "id": "2:5724033975412775664",
+      "lastPropertyId": "3:7309860671533523406",
       "name": "PersonRecord",
       "properties": [
         {
-          "id": "1:4330341805918903531",
-          "name": "personId",
+          "id": "1:7617310022622233298",
+          "name": "personID",
           "type": 6,
           "flags": 1
         },
         {
-          "id": "2:1233840069351220404",
+          "id": "2:4766740777198822324",
           "name": "personName",
           "type": 9
+        },
+        {
+          "id": "3:7309860671533523406",
+          "name": "numImages",
+          "type": 6
         }
       ],
       "relations": []
     }
   ],
-  "lastEntityId": "2:5511861186785408209",
-  "lastIndexId": "2:5906889326038115236",
+  "lastEntityId": "2:5724033975412775664",
+  "lastIndexId": "2:1210613089703466990",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,

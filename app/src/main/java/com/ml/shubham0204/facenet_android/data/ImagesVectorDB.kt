@@ -10,7 +10,7 @@ class ImagesVectorDB {
 
     fun removeFaceRecordsWithPersonID(personID: Long) {
         imagesBox.removeByIds(
-            imagesBox.query(FaceImageRecord_.personId.equal(personID)).build().findIds().toList()
+            imagesBox.query(FaceImageRecord_.personID.equal(personID)).build().findIds().toList()
         )
     }
 }
