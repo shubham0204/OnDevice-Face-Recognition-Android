@@ -12,7 +12,9 @@ import androidx.navigation.compose.rememberNavController
 import com.ml.shubham0204.facenet_android.presentation.screens.AddFaceScreen
 import com.ml.shubham0204.facenet_android.presentation.screens.DetectScreen
 import com.ml.shubham0204.facenet_android.presentation.screens.FaceListScreen
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
