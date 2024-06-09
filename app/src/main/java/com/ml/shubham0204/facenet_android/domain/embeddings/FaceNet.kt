@@ -2,12 +2,12 @@ package com.ml.shubham0204.facenet_android.domain.embeddings
 
 import android.content.Context
 import android.graphics.Bitmap
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.nio.ByteBuffer
 import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.sqrt
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.CompatibilityList
@@ -58,9 +58,10 @@ class FaceNet(context: Context, useGpu: Boolean = false, useXNNPack: Boolean = f
     }
 
     // Gets an face embedding using FaceNet
-    suspend fun getFaceEmbedding(image: Bitmap) = withContext(Dispatchers.Default) {
-        return@withContext runFaceNet(convertBitmapToBuffer(image))[0]
-    }
+    suspend fun getFaceEmbedding(image: Bitmap) =
+        withContext(Dispatchers.Default) {
+            return@withContext runFaceNet(convertBitmapToBuffer(image))[0]
+        }
 
     // Run the FaceNet model
     private fun runFaceNet(inputs: Any): Array<FloatArray> {

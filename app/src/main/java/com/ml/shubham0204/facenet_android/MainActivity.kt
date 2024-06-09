@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
             val navHostController = rememberNavController()
             NavHost(
                 navController = navHostController,
-                startDestination = "detect",
+                startDestination = "add-face",
                 enterTransition = { fadeIn() },
                 exitTransition = { fadeOut() }
             ) {

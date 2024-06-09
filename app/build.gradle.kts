@@ -82,6 +82,10 @@ dependencies {
     // MLKit Face Detection
     implementation(libs.face.detection)
 
+    // Kotlin Coil
+    implementation(libs.coil)
+    implementation(libs.coil.compose)
+
     // CameraX
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)
