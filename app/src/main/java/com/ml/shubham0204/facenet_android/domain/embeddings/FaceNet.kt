@@ -14,6 +14,8 @@ import org.tensorflow.lite.gpu.CompatibilityList
 import org.tensorflow.lite.gpu.GpuDelegate
 import org.tensorflow.lite.support.common.FileUtil
 import org.tensorflow.lite.support.common.TensorOperator
+import org.tensorflow.lite.support.common.ops.CastOp
+import org.tensorflow.lite.support.common.ops.NormalizeOp
 import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.image.ops.ResizeOp
@@ -21,13 +23,13 @@ import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import org.tensorflow.lite.support.tensorbuffer.TensorBufferFloat
 
 // Utility class for FaceNet model
-class FaceNet(context: Context, useGpu: Boolean = false, useXNNPack: Boolean = false) {
+class FaceNet(context: Context, useGpu: Boolean = true, useXNNPack: Boolean = true) {
 
     // Input image size for FaceNet model.
     private val imgSize = 160
 
     // Output embedding size
-    private val embeddingDim = 128
+    private val embeddingDim = 512
 
     private var interpreter: Interpreter
     private val imageTensorProcessor =
@@ -54,7 +56,7 @@ class FaceNet(context: Context, useGpu: Boolean = false, useXNNPack: Boolean = f
                 useNNAPI = true
             }
         interpreter =
-            Interpreter(FileUtil.loadMappedFile(context, "facenet.tflite"), interpreterOptions)
+            Interpreter(FileUtil.loadMappedFile(context, "facenet_512.tflite"), interpreterOptions)
     }
 
     // Gets an face embedding using FaceNet

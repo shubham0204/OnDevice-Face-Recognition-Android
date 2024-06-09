@@ -8,6 +8,7 @@ import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.RectF
+import android.util.Log
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.widget.FrameLayout
@@ -26,6 +27,7 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.Face
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
+import com.ml.shubham0204.facenet_android.presentation.viewmodels.DetectScreenViewModel
 import java.util.concurrent.Executors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,6 +39,7 @@ import kotlinx.coroutines.withContext
 class FaceDetectionOverlay(
     private val lifecycleOwner: LifecycleOwner,
     private val context: Context,
+    private val viewModel: DetectScreenViewModel
 ) : FrameLayout(context) {
 
     private var overlayWidth: Int = 0
@@ -171,21 +174,24 @@ class FaceDetectionOverlay(
             detector
                 .process(inputImage)
                 .addOnSuccessListener { faces ->
-                    CoroutineScope(Dispatchers.Default).launch { showFaces(faces) }
+                    CoroutineScope(Dispatchers.Default).launch { showFaces(faces, frameBitmap) }
                 }
                 .addOnCompleteListener { image.close() }
         }
 
-    private suspend fun showFaces(faces: List<Face>) {
+    private suspend fun showFaces(faces: List<Face>, frameBitmap: Bitmap) {
         withContext(Dispatchers.Default) {
             val predictions = ArrayList<Prediction>()
             faces.forEach {
+                val t1 = System.currentTimeMillis()
+                val name = viewModel.detectFace(frameBitmap)
+                Log.e( "APP" , "Retrieval time: ${System.currentTimeMillis() - t1}")
                 val box = it.boundingBox.toRectF()
                 boundingBoxTransform.mapRect(box)
                 predictions.add(
                     Prediction(
                         box,
-                        "",
+                        name
                     )
                 )
             }

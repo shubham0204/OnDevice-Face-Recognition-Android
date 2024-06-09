@@ -1,6 +1,7 @@
 package com.ml.shubham0204.facenet_android.presentation.viewmodels
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -34,10 +35,11 @@ constructor(val personUseCase: PersonUseCase, val imageVectorUseCase: ImageVecto
             selectedImageURIs.value.forEach {
                 imageVectorUseCase.addImage(id, personNameState.value, it).onFailure {
                     val errorMessage = (it as AppException).errorCode.message
-                    // TODO: Show message for each error here
+                    Log.e( "APP" , "Error message: $errorMessage")
                 }
                 numImagesProcessed.value += 1
             }
+            Log.e( "APP" , "Images processed")
         }
     }
 }

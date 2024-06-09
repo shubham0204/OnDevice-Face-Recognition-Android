@@ -4,6 +4,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -37,7 +38,9 @@ import com.ml.shubham0204.facenet_android.presentation.viewmodels.AddFaceScreenV
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
-fun AddFaceScreen() {
+fun AddFaceScreen(
+    onNavigateBack: (() -> Unit)
+) {
     FaceNetAndroidTheme {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -47,7 +50,7 @@ fun AddFaceScreen() {
                         Text(text = "Add Faces", style = MaterialTheme.typography.headlineSmall)
                     },
                     navigationIcon = {
-                        IconButton(onClick = {}) {
+                        IconButton(onClick = onNavigateBack) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Default.ArrowBack,
                                 contentDescription = "Navigate Back"
@@ -73,23 +76,32 @@ private fun ScreenUI(viewModel: AddFaceScreenViewModel) {
         ) {
             viewModel.selectedImageURIs.value = it
         }
-    var personName by remember { mutableStateOf("") }
+    var personName by remember { viewModel.personNameState }
     TextField(
         value = personName,
         onValueChange = { personName = it },
         placeholder = { Text(text = "Enter the person's name") },
         singleLine = true
     )
-    Button(
-        onClick = {
-            pickVisualMediaLauncher.launch(
-                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-            )
+    Row {
+        Button(
+            enabled = viewModel.personNameState.value.isNotEmpty(),
+            onClick = {
+                pickVisualMediaLauncher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            }
+        ) {
+            Icon(imageVector = Icons.Default.Add, contentDescription = "Add photos")
+            Text(text = "Add photos")
         }
-    ) {
-        Icon(imageVector = Icons.Default.Add, contentDescription = "Add photos")
-        Text(text = "Add photos")
+        if (viewModel.selectedImageURIs.value.isNotEmpty()) {
+            Button(onClick = { viewModel.addImages() }) {
+                Text(text = "Read images")
+            }
+        }
     }
+
     Text(
         text = "${viewModel.selectedImageURIs.value.size} image(s) selected",
         style = MaterialTheme.typography.labelSmall

@@ -24,13 +24,20 @@ class MainActivity : ComponentActivity() {
             val navHostController = rememberNavController()
             NavHost(
                 navController = navHostController,
-                startDestination = "add-face",
+                startDestination = "detect",
                 enterTransition = { fadeIn() },
                 exitTransition = { fadeOut() }
             ) {
-                composable("add-face") { AddFaceScreen() }
-                composable("detect") { DetectScreen() }
-                composable("face-list") { FaceListScreen() }
+                composable("add-face") { AddFaceScreen{ navHostController.navigateUp() } }
+                composable("detect") {
+                    DetectScreen{ navHostController.navigate("face-list" )}
+                }
+                composable("face-list") {
+                    FaceListScreen(
+                        onNavigateBack = { navHostController.navigateUp() } ,
+                        onAddFaceClick = { navHostController.navigate("add-face" )}
+                    )
+                }
             }
         }
     }

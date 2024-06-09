@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.graphics.Rect
 import android.net.Uri
+import android.util.Log
 import androidx.exifinterface.media.ExifInterface
 import com.google.android.gms.tasks.Tasks
 import com.google.mlkit.vision.common.InputImage
@@ -24,7 +25,7 @@ class MLKitFaceDetector(private val context: Context) {
             .build()
     private val detector = FaceDetection.getClient(realTimeOpts)
 
-    suspend fun getCroppedFaces(imageUri: Uri): Result<Bitmap> =
+    suspend fun getCroppedFace(imageUri: Uri): Result<Bitmap> =
         withContext(Dispatchers.IO) {
             val imageInputStream =
                 context.contentResolver.openInputStream(imageUri)
@@ -52,8 +53,45 @@ class MLKitFaceDetector(private val context: Context) {
             } else if (faces.size == 0) {
                 return@withContext Result.failure<Bitmap>(AppException(ErrorCode.NO_FACE))
             } else {
+                val rect = faces[0].boundingBox
                 if (validateRect(imageBitmap, faces[0].boundingBox)) {
-                    val croppedBitmap = cropRectFromBitmap(imageBitmap, faces[0].boundingBox)
+                    val croppedBitmap =
+                        Bitmap.createBitmap(
+                            imageBitmap,
+                            rect.left,
+                            rect.top,
+                            rect.width(),
+                            rect.height()
+                        )
+                    return@withContext Result.success(croppedBitmap)
+                } else {
+                    return@withContext Result.failure<Bitmap>(
+                        AppException(ErrorCode.FACE_DETECTOR_FAILURE)
+                    )
+                }
+            }
+        }
+
+    suspend fun getCroppedFace(frameBitmap: Bitmap): Result<Bitmap> =
+        withContext(Dispatchers.IO) {
+            val t1 = System.currentTimeMillis()
+            val faces = Tasks.await(detector.process(InputImage.fromBitmap(frameBitmap, 0)))
+            Log.e( "APP" , "Actual face detection: ${System.currentTimeMillis() - t1}")
+            if (faces.size > 1) {
+                return@withContext Result.failure<Bitmap>(AppException(ErrorCode.MULTIPLE_FACES))
+            } else if (faces.size == 0) {
+                return@withContext Result.failure<Bitmap>(AppException(ErrorCode.NO_FACE))
+            } else {
+                val rect = faces[0].boundingBox
+                if (validateRect(frameBitmap, faces[0].boundingBox)) {
+                    val croppedBitmap =
+                        Bitmap.createBitmap(
+                            frameBitmap,
+                            rect.left,
+                            rect.top,
+                            rect.width(),
+                            rect.height()
+                        )
                     return@withContext Result.success(croppedBitmap)
                 } else {
                     return@withContext Result.failure<Bitmap>(
@@ -67,10 +105,6 @@ class MLKitFaceDetector(private val context: Context) {
         val matrix = Matrix()
         matrix.postRotate(degrees)
         return Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, false)
-    }
-
-    private fun cropRectFromBitmap(source: Bitmap, rect: Rect): Bitmap {
-        return Bitmap.createBitmap(source, rect.left, rect.top, rect.width(), rect.height())
     }
 
     private fun validateRect(cameraFrameBitmap: Bitmap, boundingBox: Rect): Boolean {
