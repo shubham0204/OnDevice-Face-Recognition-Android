@@ -183,9 +183,7 @@ class FaceDetectionOverlay(
         withContext(Dispatchers.Default) {
             val predictions = ArrayList<Prediction>()
             faces.forEach {
-                val t1 = System.currentTimeMillis()
-                val name = viewModel.detectFace(frameBitmap)
-                Log.e( "APP" , "Retrieval time: ${System.currentTimeMillis() - t1}")
+                val name = if (viewModel.getNumPeople() > 0) { viewModel.detectFace(frameBitmap) } else { "" }
                 val box = it.boundingBox.toRectF()
                 boundingBoxTransform.mapRect(box)
                 predictions.add(

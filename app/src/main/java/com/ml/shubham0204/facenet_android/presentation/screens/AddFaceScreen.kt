@@ -3,17 +3,20 @@ package com.ml.shubham0204.facenet_android.presentation.screens
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -25,22 +28,22 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.ml.shubham0204.facenet_android.presentation.components.AppProgressDialog
+import com.ml.shubham0204.facenet_android.presentation.components.DelayedVisibility
+import com.ml.shubham0204.facenet_android.presentation.components.hideProgressDialog
+import com.ml.shubham0204.facenet_android.presentation.components.showProgressDialog
 import com.ml.shubham0204.facenet_android.presentation.theme.FaceNetAndroidTheme
 import com.ml.shubham0204.facenet_android.presentation.viewmodels.AddFaceScreenViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview
 @Composable
-fun AddFaceScreen(
-    onNavigateBack: (() -> Unit)
-) {
+fun AddFaceScreen(onNavigateBack: (() -> Unit)) {
     FaceNetAndroidTheme {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -63,6 +66,7 @@ fun AddFaceScreen(
             Column(modifier = Modifier.padding(innerPadding)) {
                 val viewModel: AddFaceScreenViewModel = hiltViewModel()
                 ScreenUI(viewModel)
+                ImageReadProgressDialog(viewModel)
             }
         }
     }
@@ -77,36 +81,42 @@ private fun ScreenUI(viewModel: AddFaceScreenViewModel) {
             viewModel.selectedImageURIs.value = it
         }
     var personName by remember { viewModel.personNameState }
-    TextField(
-        value = personName,
-        onValueChange = { personName = it },
-        placeholder = { Text(text = "Enter the person's name") },
-        singleLine = true
-    )
-    Row {
-        Button(
-            enabled = viewModel.personNameState.value.isNotEmpty(),
-            onClick = {
-                pickVisualMediaLauncher.launch(
-                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                )
-            }
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
+        TextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = personName,
+            onValueChange = { personName = it },
+            label = { Text(text = "Enter the person's name") },
+            singleLine = true
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = "Add photos")
-            Text(text = "Add photos")
-        }
-        if (viewModel.selectedImageURIs.value.isNotEmpty()) {
-            Button(onClick = { viewModel.addImages() }) {
-                Text(text = "Read images")
+            Button(
+                enabled = viewModel.personNameState.value.isNotEmpty(),
+                onClick = {
+                    pickVisualMediaLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                }
+            ) {
+                Icon(imageVector = Icons.Default.Photo, contentDescription = "Choose photos")
+                Text(text = "Choose photos")
+            }
+            DelayedVisibility(viewModel.selectedImageURIs.value.isNotEmpty()) {
+                Button(onClick = { viewModel.addImages() }) { Text(text = "Add to database") }
             }
         }
+        DelayedVisibility(viewModel.selectedImageURIs.value.isNotEmpty()) {
+            Text(
+                text = "${viewModel.selectedImageURIs.value.size} image(s) selected",
+                style = MaterialTheme.typography.labelSmall
+            )
+        }
+        ImagesGrid(viewModel)
     }
-
-    Text(
-        text = "${viewModel.selectedImageURIs.value.size} image(s) selected",
-        style = MaterialTheme.typography.labelSmall
-    )
-    ImagesGrid(viewModel)
 }
 
 @Composable
@@ -114,5 +124,16 @@ private fun ImagesGrid(viewModel: AddFaceScreenViewModel) {
     val uris by remember { viewModel.selectedImageURIs }
     LazyVerticalGrid(columns = GridCells.Fixed(2)) {
         items(uris) { AsyncImage(model = it, contentDescription = null) }
+    }
+}
+
+@Composable
+private fun ImageReadProgressDialog(viewModel: AddFaceScreenViewModel) {
+    val isProcessing by remember { viewModel.isProcessingImages }
+    AppProgressDialog()
+    if (isProcessing) {
+        showProgressDialog()
+    } else {
+        hideProgressDialog()
     }
 }

@@ -9,15 +9,20 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Cameraswitch
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
@@ -41,10 +46,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.ml.shubham0204.facenet_android.R
 import com.ml.shubham0204.facenet_android.presentation.components.AppAlertDialog
 import com.ml.shubham0204.facenet_android.presentation.components.DelayedVisibility
 import com.ml.shubham0204.facenet_android.presentation.components.FaceDetectionOverlay
@@ -66,18 +74,14 @@ fun DetectScreen(
             modifier = Modifier.fillMaxSize(),
             topBar = {
                 TopAppBar(
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
-                        titleContentColor = Color.White,
-                        actionIconContentColor = Color.White
-                        ),
+                    colors = TopAppBarDefaults.topAppBarColors(),
                     title = {
-                        Text(text = "Add Faces", style = MaterialTheme.typography.headlineSmall)
+                        Text(text = stringResource(id = R.string.app_name), style = MaterialTheme.typography.headlineSmall)
                     },
                     actions = {
                         IconButton(onClick = onOpenFaceListClick) {
                             Icon(
-                                imageVector = Icons.Default.Star,
+                                imageVector = Icons.Default.Face,
                                 contentDescription = "Open Face List"
                             )
                         }
@@ -89,16 +93,8 @@ fun DetectScreen(
                             }
                         }) {
                             Icon(
-                                imageVector = Icons.Default.Call,
+                                imageVector = Icons.Default.Cameraswitch,
                                 contentDescription = "Switch Camera"
-                            )
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = {}) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                                contentDescription = "Navigate Back"
                             )
                         }
                     }
@@ -115,6 +111,26 @@ private fun ScreenUI() {
     val viewModel: DetectScreenViewModel = hiltViewModel()
     Box {
         Camera(viewModel)
+        DelayedVisibility(viewModel.getNumPeople() > 0) {
+            Text(
+                text = "Recognition on ${viewModel.getNumPeople()} face(s)",
+                color=Color.White,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+        }
+        DelayedVisibility(viewModel.getNumPeople() == 0L) {
+            Text(
+                text = "No images in database",
+                color=Color.White,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .background(Color.Blue, RoundedCornerShape(16.dp))
+                    .padding(8.dp),
+                textAlign = TextAlign.Center
+            )
+        }
         AppAlertDialog()
     }
 }

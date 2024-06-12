@@ -1,7 +1,6 @@
 package com.ml.shubham0204.facenet_android.presentation.viewmodels
 
 import android.net.Uri
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -9,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import com.ml.shubham0204.facenet_android.domain.AppException
 import com.ml.shubham0204.facenet_android.domain.ImageVectorUseCase
 import com.ml.shubham0204.facenet_android.domain.PersonUseCase
+import com.ml.shubham0204.facenet_android.presentation.components.setProgressDialogText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -28,18 +28,26 @@ constructor(val personUseCase: PersonUseCase, val imageVectorUseCase: ImageVecto
     val numImagesProcessed: MutableState<Int> = mutableIntStateOf(0)
 
     fun addImages() {
-        val id =
-            personUseCase.addPerson(personNameState.value, selectedImageURIs.value.size.toLong())
         isProcessingImages.value = true
         CoroutineScope(Dispatchers.Default).launch {
+            val id =
+                personUseCase.addPerson(
+                    personNameState.value,
+                    selectedImageURIs.value.size.toLong()
+                )
             selectedImageURIs.value.forEach {
-                imageVectorUseCase.addImage(id, personNameState.value, it).onFailure {
-                    val errorMessage = (it as AppException).errorCode.message
-                    Log.e( "APP" , "Error message: $errorMessage")
-                }
-                numImagesProcessed.value += 1
+                imageVectorUseCase
+                    .addImage(id, personNameState.value, it)
+                    .onFailure {
+                        val errorMessage = (it as AppException).errorCode.message
+                        setProgressDialogText(errorMessage)
+                    }
+                    .onSuccess {
+                        numImagesProcessed.value += 1
+                        setProgressDialogText("Processed ${numImagesProcessed.value} image(s)")
+                    }
             }
-            Log.e( "APP" , "Images processed")
+            isProcessingImages.value = false
         }
     }
 }

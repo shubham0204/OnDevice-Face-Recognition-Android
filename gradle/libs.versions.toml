@@ -19,6 +19,7 @@ exifinterface = "1.3.7"
 tensorflow-lite = "2.14.0"
 tensorflow-lite-support = "0.4.3"
 camerax = "1.3.3"
+uiTextGoogleFonts = "1.6.7"
 
 
 
@@ -40,6 +41,7 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+compose-material3-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 
 # Vector DB (NoSQL database)
 objectbox = { module = "io.objectbox:objectbox-gradle-plugin", version.ref = "objectboxGradlePlugin" }
@@ -66,6 +68,7 @@ androidx-exifinterface = { module = "androidx.exifinterface:exifinterface", vers
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camerax" }
 androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
 androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }
+androidx-ui-text-google-fonts = { group = "androidx.compose.ui", name = "ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
 
 
 

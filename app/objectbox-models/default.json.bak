@@ -38,7 +38,7 @@
     },
     {
       "id": "2:5724033975412775664",
-      "lastPropertyId": "5:6214334937147888472",
+      "lastPropertyId": "4:1955098665124372966",
       "name": "PersonRecord",
       "properties": [
         {
@@ -58,9 +58,9 @@
           "type": 6
         },
         {
-          "id": "5:6214334937147888472",
-          "name": "addTime",
-          "type": 6
+          "id": "4:1955098665124372966",
+          "name": "personImage",
+          "type": 23
         }
       ],
       "relations": []
@@ -74,9 +74,7 @@
   "modelVersionParserMinimum": 5,
   "retiredEntityUids": [],
   "retiredIndexUids": [],
-  "retiredPropertyUids": [
-    1955098665124372966
-  ],
+  "retiredPropertyUids": [],
   "retiredRelationUids": [],
   "version": 1
 }

@@ -14,4 +14,8 @@ constructor(
 
     val personFlow = personUseCase.getAll()
 
+    fun removeFace(id: Long) {
+        personUseCase.removePerson(id)
+    }
+
 }

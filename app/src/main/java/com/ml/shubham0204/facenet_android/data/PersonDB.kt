@@ -18,6 +18,8 @@ class PersonDB {
         personBox.removeByIds(listOf(personID))
     }
 
+    fun getCount(): Long = personBox.count()
+
     @OptIn(ExperimentalCoroutinesApi::class)
     fun getAll(): Flow<MutableList<PersonRecord>> =
         personBox.query(PersonRecord_.personID.notNull()).build().flow().flowOn(Dispatchers.IO)

@@ -18,5 +18,6 @@ data class FaceImageRecord(
 data class PersonRecord(
     @Id var personID: Long = 0,
     var personName: String = "",
-    var numImages: Long = 0
+    var numImages: Long = 0,
+    var addTime: Long = 0
 )

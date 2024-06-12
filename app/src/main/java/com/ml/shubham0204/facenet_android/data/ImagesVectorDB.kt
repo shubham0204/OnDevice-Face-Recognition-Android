@@ -8,7 +8,7 @@ class ImagesVectorDB {
         imagesBox.put(record)
     }
 
-    fun getNearestEmbeddingPersonName(embedding: FloatArray): Pair<Float, FaceImageRecord> {
+    fun getNearestEmbeddingPersonName(embedding: FloatArray): FaceImageRecord? {
         /*
         Use maxResultCount to set the maximum number of objects to return by the ANN condition.
         Hint: it can also be used as the "ef" HNSW parameter to increase the search quality in combination
@@ -20,8 +20,8 @@ class ImagesVectorDB {
                 .query(FaceImageRecord_.faceEmbedding.nearestNeighbors(embedding, 10))
                 .build()
                 .findWithScores()
-                .map { Pair(it.score.toFloat(), it.get()) }
-                .first()
+                .map { it.get() }
+                .firstOrNull()
     }
 
     fun removeFaceRecordsWithPersonID(personID: Long) {

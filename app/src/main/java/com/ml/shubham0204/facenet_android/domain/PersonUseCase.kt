@@ -11,10 +11,16 @@ import javax.inject.Singleton
 class PersonUseCase @Inject constructor(val personDB: PersonDB) {
 
     fun addPerson(name: String, numImages: Long): Long {
-        return personDB.addPerson(PersonRecord(personName = name, numImages = numImages))
+        return personDB.addPerson(PersonRecord(personName = name, numImages = numImages, addTime=System.currentTimeMillis()))
+    }
+
+    fun removePerson(id: Long) {
+        personDB.removePerson(id)
     }
 
     fun getAll(): Flow<List<PersonRecord>> =
         personDB.getAll()
+
+    fun getCount(): Long = personDB.getCount()
 
 }

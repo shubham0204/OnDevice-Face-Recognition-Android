@@ -58,7 +58,9 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.compose.material3.icons.extended)
     implementation(libs.androidx.compose.navigation)
+    implementation(libs.androidx.ui.text.google.fonts)
 
     // ObjectBox - vector database
     debugImplementation("io.objectbox:objectbox-android-objectbrowser:4.0.0")
