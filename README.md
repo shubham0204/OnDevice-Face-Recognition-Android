@@ -8,6 +8,26 @@
 * Produce on-device face embeddings with FaceNet and use them to perform face recognition on a user-given set of images
 * Use modern Android development practices and recommended architecture guidelines while maintaining code simplicity and modularity
 
+## Setup
+
+Clone the `main` branch,
+
+```bash
+$> git clone --depth=1 https://github.com/shubham0204/OnDevice-Face-Recognition-Android
+```
+
+Perform a Gradle sync, and run the application.
+
+## Working
+
+We use the [FaceNet](https://arxiv.org/abs/1503.03832) model, which given a 160 * 160 cropped face image, produces an embedding of 128 or 512 elements capturing facial features that uniquely identify the face. We represent the embedding model as a function $M$ that accepts a cropped face image and returns a vector/embedding/list of FP numbers.
+
+1. When users select an image, the app uses MLKit's `FaceDetector` to crop faces from the image. Each image is labelled with the person's name. See [`MLKitFaceDetector.kt`](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/blob/main/app/src/main/java/com/ml/shubham0204/facenet_android/domain/face_detection/MLKitFaceDetector.kt).
+2. Each cropped face is transformed into a vector/embedding with FaceNet. See [`FaceNet.kt`](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/blob/main/app/src/main/java/com/ml/shubham0204/facenet_android/domain/embeddings/FaceNet.kt).
+3. We store these face embeddings in a vector database, that enables a faster nearest-neighbor search.
+4. Now, in the camera preview, for each frame, we perform face detection with MLKit's `FaceDetector` as in (1) and produce face embeddings for the face as in (2). We compare this face embedding (query vector) with those present in the vector database, and determines the name/label of the embedding (nearest-neighbor) closest to the query vector using cosine similarity.
+5. The vector database performs a lossy compression on the embeddings stored in it, and hence the distance returned with the nearest-neighbor is also an estimate. Hence, we re-compute the cosine similarity between the nearest-neighbor vector and the query vector. See [`ImageVectorUseCase.kt`](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/blob/main/app/src/main/java/com/ml/shubham0204/facenet_android/domain/ImageVectorUseCase.kt)
+
 ## Tools
 
 1. [TensorFlow Lite](https://ai.google.dev/edge/lite) as a runtime to execute the FaceNet model
@@ -16,8 +36,17 @@
 
 ## Discussion
 
-### How does the face-recognition pipeline work?
+### How does this project differ from my earlier [`FaceRecognition_With_FaceNet_Android`](https://github.com/shubham0204/FaceRecognition_With_FaceNet_Android) project?
 
-We use the FaceNet model, which given a 160 * 160 cropped face image, produces an embedding of 128 or 512 elements capturing facial features that uniquely identify the face. 
+The [FaceRecognition_With_FaceNet_Android](https://github.com/shubham0204/FaceRecognition_With_FaceNet_Android) is a similar project initiated in 2020 and re-iterated several times since then. Here are the key similarities and differences with this project:
 
-1. When users select an image, the app uses MLKit's `FaceDetector` to crop faces $X_1, X_2, ... , X_n$ from the image.
+#### Similarities
+
+1. Use FaceNet and FaceNet-512 models executed with TensorFlow Lite
+2. Perform on-device face-recognition on a user-given dataset of images
+
+#### Differences
+
+1. Uses ObjectBox to store face embeddings and perform nearest-neighbor search.
+2. Does not read a directory from the file-system, instead allows the user to select a group of photos and *label* them with name of a person
+3. Considers only the nearest-neighbor to infer the identify of a person in the live camera-feed
