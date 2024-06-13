@@ -8,7 +8,6 @@ import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.RectF
-import android.util.Log
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.widget.FrameLayout
@@ -27,7 +26,7 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.Face
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
-import com.ml.shubham0204.facenet_android.presentation.viewmodels.DetectScreenViewModel
+import com.ml.shubham0204.facenet_android.presentation.screens.detect_screen.DetectScreenViewModel
 import java.util.concurrent.Executors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -183,15 +182,15 @@ class FaceDetectionOverlay(
         withContext(Dispatchers.Default) {
             val predictions = ArrayList<Prediction>()
             faces.forEach {
-                val name = if (viewModel.getNumPeople() > 0) { viewModel.detectFace(frameBitmap) } else { "" }
+                val name =
+                    if (viewModel.getNumPeople() > 0) {
+                        viewModel.detectFace(frameBitmap)
+                    } else {
+                        ""
+                    }
                 val box = it.boundingBox.toRectF()
                 boundingBoxTransform.mapRect(box)
-                predictions.add(
-                    Prediction(
-                        box,
-                        name
-                    )
-                )
+                predictions.add(Prediction(box, name))
             }
             withContext(Dispatchers.Main) {
                 this@FaceDetectionOverlay.predictions = predictions.toTypedArray()

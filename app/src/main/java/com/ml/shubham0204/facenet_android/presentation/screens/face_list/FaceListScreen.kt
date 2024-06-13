@@ -1,10 +1,6 @@
-package com.ml.shubham0204.facenet_android.presentation.screens
+package com.ml.shubham0204.facenet_android.presentation.screens.face_list
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.text.format.DateUtils
-import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -21,7 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Face
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -36,23 +31,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
 import com.ml.shubham0204.facenet_android.data.PersonRecord
 import com.ml.shubham0204.facenet_android.presentation.components.AppAlertDialog
 import com.ml.shubham0204.facenet_android.presentation.components.createAlertDialog
 import com.ml.shubham0204.facenet_android.presentation.theme.FaceNetAndroidTheme
-import com.ml.shubham0204.facenet_android.presentation.viewmodels.FaceListScreenViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FaceListScreen(
-    onNavigateBack: (() -> Unit) ,
-    onAddFaceClick: (() -> Unit)
-) {
+fun FaceListScreen(onNavigateBack: (() -> Unit), onAddFaceClick: (() -> Unit)) {
     FaceNetAndroidTheme {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -70,9 +59,9 @@ fun FaceListScreen(
                         }
                     },
                 )
-            } ,
+            },
             floatingActionButton = {
-                FloatingActionButton(onClick = onAddFaceClick ) {
+                FloatingActionButton(onClick = onAddFaceClick) {
                     Icon(imageVector = Icons.Default.Add, contentDescription = "Add a new face")
                 }
             }
@@ -89,25 +78,16 @@ fun FaceListScreen(
 @Composable
 private fun ScreenUI(viewModel: FaceListScreenViewModel) {
     val faces by viewModel.personFlow.collectAsState(emptyList())
-    LazyColumn {
-        items( faces ) {
-            FaceListItem(it) { viewModel.removeFace(it.personID) }
-        }
-    }
+    LazyColumn { items(faces) { FaceListItem(it) { viewModel.removeFace(it.personID) } } }
 }
 
 @Composable
-private fun FaceListItem(personRecord: PersonRecord, onRemoveFaceClick: (()->Unit)) {
+private fun FaceListItem(personRecord: PersonRecord, onRemoveFaceClick: (() -> Unit)) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-            .padding(12.dp),
+        modifier = Modifier.fillMaxWidth().background(Color.White).padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .weight(1f)) {
+        Column(modifier = Modifier.fillMaxWidth().weight(1f)) {
             Text(
                 text = personRecord.personName,
                 style = MaterialTheme.typography.bodyLarge,
@@ -122,18 +102,18 @@ private fun FaceListItem(personRecord: PersonRecord, onRemoveFaceClick: (()->Uni
         }
         Icon(
             modifier =
-            Modifier.clickable {
-                createAlertDialog(
-                    dialogTitle = "Remove person",
-                    dialogText =
-                    "Are you sure to remove this person from the database. The face for this person will not " +
-                            "be detected in realtime",
-                    dialogPositiveButtonText = "Remove",
-                    onPositiveButtonClick = onRemoveFaceClick,
-                    dialogNegativeButtonText = "Cancel",
-                    onNegativeButtonClick = {}
-                )
-            },
+                Modifier.clickable {
+                    createAlertDialog(
+                        dialogTitle = "Remove person",
+                        dialogText =
+                            "Are you sure to remove this person from the database. The face for this person will not " +
+                                "be detected in realtime",
+                        dialogPositiveButtonText = "Remove",
+                        onPositiveButtonClick = onRemoveFaceClick,
+                        dialogNegativeButtonText = "Cancel",
+                        onNegativeButtonClick = {}
+                    )
+                },
             imageVector = Icons.Default.Clear,
             contentDescription = "Remove face"
         )

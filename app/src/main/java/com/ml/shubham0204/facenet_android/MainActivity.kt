@@ -9,9 +9,9 @@ import androidx.compose.animation.fadeOut
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.ml.shubham0204.facenet_android.presentation.screens.AddFaceScreen
-import com.ml.shubham0204.facenet_android.presentation.screens.DetectScreen
-import com.ml.shubham0204.facenet_android.presentation.screens.FaceListScreen
+import com.ml.shubham0204.facenet_android.presentation.screens.add_face.AddFaceScreen
+import com.ml.shubham0204.facenet_android.presentation.screens.detect_screen.DetectScreen
+import com.ml.shubham0204.facenet_android.presentation.screens.face_list.FaceListScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -28,14 +28,12 @@ class MainActivity : ComponentActivity() {
                 enterTransition = { fadeIn() },
                 exitTransition = { fadeOut() }
             ) {
-                composable("add-face") { AddFaceScreen{ navHostController.navigateUp() } }
-                composable("detect") {
-                    DetectScreen{ navHostController.navigate("face-list" )}
-                }
+                composable("add-face") { AddFaceScreen { navHostController.navigateUp() } }
+                composable("detect") { DetectScreen { navHostController.navigate("face-list") } }
                 composable("face-list") {
                     FaceListScreen(
-                        onNavigateBack = { navHostController.navigateUp() } ,
-                        onAddFaceClick = { navHostController.navigate("add-face" )}
+                        onNavigateBack = { navHostController.navigateUp() },
+                        onAddFaceClick = { navHostController.navigate("add-face") }
                     )
                 }
             }

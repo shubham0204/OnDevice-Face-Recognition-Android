@@ -57,6 +57,7 @@ fun setProgressDialogText(message: String) {
 
 fun showProgressDialog() {
     progressDialogVisibleState.value = true
+    progressDialogText.value = ""
 }
 
 fun hideProgressDialog() {

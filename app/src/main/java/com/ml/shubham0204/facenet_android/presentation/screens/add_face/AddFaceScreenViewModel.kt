@@ -1,4 +1,4 @@
-package com.ml.shubham0204.facenet_android.presentation.viewmodels
+package com.ml.shubham0204.facenet_android.presentation.screens.add_face
 
 import android.net.Uri
 import androidx.compose.runtime.MutableState
@@ -10,16 +10,18 @@ import com.ml.shubham0204.facenet_android.domain.ImageVectorUseCase
 import com.ml.shubham0204.facenet_android.domain.PersonUseCase
 import com.ml.shubham0204.facenet_android.presentation.components.setProgressDialogText
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class AddFaceScreenViewModel
 @Inject
-constructor(val personUseCase: PersonUseCase, val imageVectorUseCase: ImageVectorUseCase) :
-    ViewModel() {
+constructor(
+    private val personUseCase: PersonUseCase,
+    private val imageVectorUseCase: ImageVectorUseCase
+) : ViewModel() {
 
     val personNameState: MutableState<String> = mutableStateOf("")
     val selectedImageURIs: MutableState<List<Uri>> = mutableStateOf(emptyList())

@@ -1,8 +1,7 @@
-package com.ml.shubham0204.facenet_android.presentation.screens
+package com.ml.shubham0204.facenet_android.presentation.screens.detect_screen
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -13,20 +12,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Cameraswitch
 import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,7 +27,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -58,7 +50,6 @@ import com.ml.shubham0204.facenet_android.presentation.components.DelayedVisibil
 import com.ml.shubham0204.facenet_android.presentation.components.FaceDetectionOverlay
 import com.ml.shubham0204.facenet_android.presentation.components.createAlertDialog
 import com.ml.shubham0204.facenet_android.presentation.theme.FaceNetAndroidTheme
-import com.ml.shubham0204.facenet_android.presentation.viewmodels.DetectScreenViewModel
 
 private val cameraPermissionStatus = mutableStateOf(false)
 private val cameraFacing = mutableIntStateOf(CameraSelector.LENS_FACING_BACK)
@@ -66,9 +57,7 @@ private lateinit var cameraPermissionLauncher: ManagedActivityResultLauncher<Str
 
 @kotlin.OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetectScreen(
-    onOpenFaceListClick: (() -> Unit)
-) {
+fun DetectScreen(onOpenFaceListClick: (() -> Unit)) {
     FaceNetAndroidTheme {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -76,7 +65,10 @@ fun DetectScreen(
                 TopAppBar(
                     colors = TopAppBarDefaults.topAppBarColors(),
                     title = {
-                        Text(text = stringResource(id = R.string.app_name), style = MaterialTheme.typography.headlineSmall)
+                        Text(
+                            text = stringResource(id = R.string.app_name),
+                            style = MaterialTheme.typography.headlineSmall
+                        )
                     },
                     actions = {
                         IconButton(onClick = onOpenFaceListClick) {
@@ -85,13 +77,15 @@ fun DetectScreen(
                                 contentDescription = "Open Face List"
                             )
                         }
-                        IconButton(onClick = {
-                            if (cameraFacing.intValue == CameraSelector.LENS_FACING_BACK) {
-                                cameraFacing.intValue = CameraSelector.LENS_FACING_FRONT
-                            } else {
-                                cameraFacing.intValue = CameraSelector.LENS_FACING_BACK
+                        IconButton(
+                            onClick = {
+                                if (cameraFacing.intValue == CameraSelector.LENS_FACING_BACK) {
+                                    cameraFacing.intValue = CameraSelector.LENS_FACING_FRONT
+                                } else {
+                                    cameraFacing.intValue = CameraSelector.LENS_FACING_BACK
+                                }
                             }
-                        }) {
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.Cameraswitch,
                                 contentDescription = "Switch Camera"
@@ -100,7 +94,7 @@ fun DetectScreen(
                     }
                 )
             }
-            ) { innerPadding ->
+        ) { innerPadding ->
             Column(modifier = Modifier.padding(innerPadding)) { ScreenUI() }
         }
     }
@@ -114,7 +108,7 @@ private fun ScreenUI() {
         DelayedVisibility(viewModel.getNumPeople() > 0) {
             Text(
                 text = "Recognition on ${viewModel.getNumPeople()} face(s)",
-                color=Color.White,
+                color = Color.White,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center
             )
@@ -122,12 +116,12 @@ private fun ScreenUI() {
         DelayedVisibility(viewModel.getNumPeople() == 0L) {
             Text(
                 text = "No images in database",
-                color=Color.White,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .background(Color.Blue, RoundedCornerShape(16.dp))
-                    .padding(8.dp),
+                color = Color.White,
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .background(Color.Blue, RoundedCornerShape(16.dp))
+                        .padding(8.dp),
                 textAlign = TextAlign.Center
             )
         }

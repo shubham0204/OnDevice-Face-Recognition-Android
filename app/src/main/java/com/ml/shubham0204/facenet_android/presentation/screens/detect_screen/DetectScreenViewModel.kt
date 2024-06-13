@@ -1,4 +1,4 @@
-package com.ml.shubham0204.facenet_android.presentation.viewmodels
+package com.ml.shubham0204.facenet_android.presentation.screens.detect_screen
 
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel

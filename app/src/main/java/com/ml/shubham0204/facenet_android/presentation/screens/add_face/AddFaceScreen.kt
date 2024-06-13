@@ -1,4 +1,4 @@
-package com.ml.shubham0204.facenet_android.presentation.screens
+package com.ml.shubham0204.facenet_android.presentation.screens.add_face
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -39,7 +39,6 @@ import com.ml.shubham0204.facenet_android.presentation.components.DelayedVisibil
 import com.ml.shubham0204.facenet_android.presentation.components.hideProgressDialog
 import com.ml.shubham0204.facenet_android.presentation.components.showProgressDialog
 import com.ml.shubham0204.facenet_android.presentation.theme.FaceNetAndroidTheme
-import com.ml.shubham0204.facenet_android.presentation.viewmodels.AddFaceScreenViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,7 +65,7 @@ fun AddFaceScreen(onNavigateBack: (() -> Unit)) {
             Column(modifier = Modifier.padding(innerPadding)) {
                 val viewModel: AddFaceScreenViewModel = hiltViewModel()
                 ScreenUI(viewModel)
-                ImageReadProgressDialog(viewModel)
+                ImageReadProgressDialog(viewModel, onNavigateBack)
             }
         }
     }
@@ -128,12 +127,16 @@ private fun ImagesGrid(viewModel: AddFaceScreenViewModel) {
 }
 
 @Composable
-private fun ImageReadProgressDialog(viewModel: AddFaceScreenViewModel) {
+private fun ImageReadProgressDialog(viewModel: AddFaceScreenViewModel, onNavigateBack: () -> Unit) {
     val isProcessing by remember { viewModel.isProcessingImages }
+    val numImagesProcessed by remember { viewModel.numImagesProcessed }
     AppProgressDialog()
     if (isProcessing) {
         showProgressDialog()
     } else {
+        if (numImagesProcessed > 0) {
+            onNavigateBack()
+        }
         hideProgressDialog()
     }
 }

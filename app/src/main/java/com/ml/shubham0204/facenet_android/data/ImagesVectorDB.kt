@@ -17,11 +17,11 @@ class ImagesVectorDB {
         (quality/performance tradeoff).
          */
         return imagesBox
-                .query(FaceImageRecord_.faceEmbedding.nearestNeighbors(embedding, 10))
-                .build()
-                .findWithScores()
-                .map { it.get() }
-                .firstOrNull()
+            .query(FaceImageRecord_.faceEmbedding.nearestNeighbors(embedding, 10))
+            .build()
+            .findWithScores()
+            .map { it.get() }
+            .firstOrNull()
     }
 
     fun removeFaceRecordsWithPersonID(personID: Long) {

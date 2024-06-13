@@ -6,7 +6,6 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.graphics.Rect
 import android.net.Uri
-import android.util.Log
 import androidx.exifinterface.media.ExifInterface
 import com.google.android.gms.tasks.Tasks
 import com.google.mlkit.vision.common.InputImage
@@ -14,6 +13,8 @@ import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
 import com.ml.shubham0204.facenet_android.domain.AppException
 import com.ml.shubham0204.facenet_android.domain.ErrorCode
+import java.io.File
+import java.io.FileOutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -27,14 +28,24 @@ class MLKitFaceDetector(private val context: Context) {
 
     suspend fun getCroppedFace(imageUri: Uri): Result<Bitmap> =
         withContext(Dispatchers.IO) {
-            val imageInputStream =
+            var imageInputStream =
                 context.contentResolver.openInputStream(imageUri)
                     ?: return@withContext Result.failure<Bitmap>(
                         AppException(ErrorCode.FACE_DETECTOR_FAILURE)
                     )
             var imageBitmap = BitmapFactory.decodeStream(imageInputStream)
-            val exifInterface = ExifInterface(imageInputStream)
             imageInputStream.close()
+
+            // Re-create an input-stream to reset its position
+            // InputStream returns false with markSupported(), hence we cannot
+            // reset its position
+            // Without recreating the inputStream, no exif-data is read
+            imageInputStream =
+                context.contentResolver.openInputStream(imageUri)
+                    ?: return@withContext Result.failure<Bitmap>(
+                        AppException(ErrorCode.FACE_DETECTOR_FAILURE)
+                    )
+            val exifInterface = ExifInterface(imageInputStream)
             imageBitmap =
                 when (
                     exifInterface.getAttributeInt(
@@ -47,6 +58,7 @@ class MLKitFaceDetector(private val context: Context) {
                     ExifInterface.ORIENTATION_ROTATE_270 -> rotateBitmap(imageBitmap, 270f)
                     else -> imageBitmap
                 }
+            imageInputStream.close()
             val faces = Tasks.await(detector.process(InputImage.fromBitmap(imageBitmap, 0)))
             if (faces.size > 1) {
                 return@withContext Result.failure<Bitmap>(AppException(ErrorCode.MULTIPLE_FACES))
@@ -74,9 +86,7 @@ class MLKitFaceDetector(private val context: Context) {
 
     suspend fun getCroppedFace(frameBitmap: Bitmap): Result<Bitmap> =
         withContext(Dispatchers.IO) {
-            val t1 = System.currentTimeMillis()
             val faces = Tasks.await(detector.process(InputImage.fromBitmap(frameBitmap, 0)))
-            Log.e( "APP" , "Actual face detection: ${System.currentTimeMillis() - t1}")
             if (faces.size > 1) {
                 return@withContext Result.failure<Bitmap>(AppException(ErrorCode.MULTIPLE_FACES))
             } else if (faces.size == 0) {
@@ -100,6 +110,11 @@ class MLKitFaceDetector(private val context: Context) {
                 }
             }
         }
+
+    fun saveBitmap(context: Context, image: Bitmap, name: String) {
+        val fileOutputStream = FileOutputStream(File(context.filesDir.absolutePath + "/$name.png"))
+        image.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream)
+    }
 
     private fun rotateBitmap(source: Bitmap, degrees: Float): Bitmap {
         val matrix = Matrix()
