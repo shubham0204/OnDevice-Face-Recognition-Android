@@ -1,5 +1,6 @@
 package com.ml.shubham0204.facenet_android.presentation.screens.add_face
 
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
@@ -130,12 +132,14 @@ private fun ImagesGrid(viewModel: AddFaceScreenViewModel) {
 private fun ImageReadProgressDialog(viewModel: AddFaceScreenViewModel, onNavigateBack: () -> Unit) {
     val isProcessing by remember { viewModel.isProcessingImages }
     val numImagesProcessed by remember { viewModel.numImagesProcessed }
+    val context = LocalContext.current
     AppProgressDialog()
     if (isProcessing) {
         showProgressDialog()
     } else {
         if (numImagesProcessed > 0) {
             onNavigateBack()
+            Toast.makeText(context, "Added to database", Toast.LENGTH_SHORT).show()
         }
         hideProgressDialog()
     }
