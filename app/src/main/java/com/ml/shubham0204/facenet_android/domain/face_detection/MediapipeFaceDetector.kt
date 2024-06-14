@@ -6,25 +6,31 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.graphics.Rect
 import android.net.Uri
+import androidx.core.graphics.toRect
 import androidx.exifinterface.media.ExifInterface
-import com.google.android.gms.tasks.Tasks
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.face.FaceDetection
-import com.google.mlkit.vision.face.FaceDetectorOptions
+import com.google.mediapipe.framework.image.BitmapImageBuilder
+import com.google.mediapipe.tasks.core.BaseOptions
+import com.google.mediapipe.tasks.vision.core.RunningMode
+import com.google.mediapipe.tasks.vision.facedetector.FaceDetector
 import com.ml.shubham0204.facenet_android.domain.AppException
 import com.ml.shubham0204.facenet_android.domain.ErrorCode
 import java.io.File
 import java.io.FileOutputStream
+import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class MLKitFaceDetector(private val context: Context) {
+@Singleton
+class MediapipeFaceDetector(private val context: Context) {
 
-    private val realTimeOpts =
-        FaceDetectorOptions.Builder()
-            .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+    private val modelName = "blaze_face_short_range.tflite"
+    private val baseOptions = BaseOptions.builder().setModelAssetPath(modelName).build()
+    private val faceDetectorOptions =
+        FaceDetector.FaceDetectorOptions.builder()
+            .setBaseOptions(baseOptions)
+            .setRunningMode(RunningMode.IMAGE)
             .build()
-    private val detector = FaceDetection.getClient(realTimeOpts)
+    private val faceDetector = FaceDetector.createFromOptions(context, faceDetectorOptions)
 
     suspend fun getCroppedFace(imageUri: Uri): Result<Bitmap> =
         withContext(Dispatchers.IO) {
@@ -59,14 +65,14 @@ class MLKitFaceDetector(private val context: Context) {
                     else -> imageBitmap
                 }
             imageInputStream.close()
-            val faces = Tasks.await(detector.process(InputImage.fromBitmap(imageBitmap, 0)))
+            val faces = faceDetector.detect(BitmapImageBuilder(imageBitmap).build()).detections()
             if (faces.size > 1) {
                 return@withContext Result.failure<Bitmap>(AppException(ErrorCode.MULTIPLE_FACES))
             } else if (faces.size == 0) {
                 return@withContext Result.failure<Bitmap>(AppException(ErrorCode.NO_FACE))
             } else {
-                val rect = faces[0].boundingBox
-                if (validateRect(imageBitmap, faces[0].boundingBox)) {
+                val rect = faces[0].boundingBox().toRect()
+                if (validateRect(imageBitmap, rect)) {
                     val croppedBitmap =
                         Bitmap.createBitmap(
                             imageBitmap,
@@ -86,14 +92,14 @@ class MLKitFaceDetector(private val context: Context) {
 
     suspend fun getCroppedFace(frameBitmap: Bitmap): Result<Bitmap> =
         withContext(Dispatchers.IO) {
-            val faces = Tasks.await(detector.process(InputImage.fromBitmap(frameBitmap, 0)))
+            val faces = faceDetector.detect(BitmapImageBuilder(frameBitmap).build()).detections()
             if (faces.size > 1) {
                 return@withContext Result.failure<Bitmap>(AppException(ErrorCode.MULTIPLE_FACES))
             } else if (faces.size == 0) {
                 return@withContext Result.failure<Bitmap>(AppException(ErrorCode.NO_FACE))
             } else {
-                val rect = faces[0].boundingBox
-                if (validateRect(frameBitmap, faces[0].boundingBox)) {
+                val rect = faces[0].boundingBox().toRect()
+                if (validateRect(frameBitmap, rect)) {
                     val croppedBitmap =
                         Bitmap.createBitmap(
                             frameBitmap,

@@ -31,7 +31,7 @@ We use the [FaceNet](https://arxiv.org/abs/1503.03832) model, which given a 160 
 ## Tools
 
 1. [TensorFlow Lite](https://ai.google.dev/edge/lite) as a runtime to execute the FaceNet model
-2. [MLKit Face Detector](https://developers.google.com/ml-kit/vision/face-detection/android) to crop faces from the image
+2. [Mediapipe Face Detection](https://ai.google.dev/edge/mediapipe/solutions/vision/face_detector/android) to crop faces from the image
 3. [ObjectBox](https://objectbox.io) for on-device vector-store and NoSQL database
 
 ## Discussion
@@ -50,3 +50,4 @@ The [FaceRecognition_With_FaceNet_Android](https://github.com/shubham0204/FaceRe
 1. Uses ObjectBox to store face embeddings and perform nearest-neighbor search.
 2. Does not read a directory from the file-system, instead allows the user to select a group of photos and *label* them with name of a person
 3. Considers only the nearest-neighbor to infer the identify of a person in the live camera-feed
+4. Uses the Mediapipe Face Detector instead of MLKit

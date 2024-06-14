@@ -5,7 +5,7 @@ import android.net.Uri
 import com.ml.shubham0204.facenet_android.data.FaceImageRecord
 import com.ml.shubham0204.facenet_android.data.ImagesVectorDB
 import com.ml.shubham0204.facenet_android.domain.embeddings.FaceNet
-import com.ml.shubham0204.facenet_android.domain.face_detection.MLKitFaceDetector
+import com.ml.shubham0204.facenet_android.domain.face_detection.MediapipeFaceDetector
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.pow
@@ -15,13 +15,13 @@ import kotlin.math.sqrt
 class ImageVectorUseCase
 @Inject
 constructor(
-    private val mlKitFaceDetector: MLKitFaceDetector,
+    private val mediapipeFaceDetector: MediapipeFaceDetector,
     private val imagesVectorDB: ImagesVectorDB,
     private val faceNet: FaceNet
 ) {
 
     suspend fun addImage(personID: Long, personName: String, imageUri: Uri): Result<Boolean> {
-        val faceDetectionResult = mlKitFaceDetector.getCroppedFace(imageUri)
+        val faceDetectionResult = mediapipeFaceDetector.getCroppedFace(imageUri)
         if (faceDetectionResult.isSuccess) {
             val embedding = faceNet.getFaceEmbedding(faceDetectionResult.getOrNull()!!)
             imagesVectorDB.addFaceImageRecord(
@@ -38,7 +38,7 @@ constructor(
     }
 
     suspend fun getNearestPersonName(frameBitmap: Bitmap): String? {
-        val faceDetectionResult = mlKitFaceDetector.getCroppedFace(frameBitmap)
+        val faceDetectionResult = mediapipeFaceDetector.getCroppedFace(frameBitmap)
         if (faceDetectionResult.isSuccess) {
             val embedding = faceNet.getFaceEmbedding(faceDetectionResult.getOrNull()!!)
             val recognitionResult =

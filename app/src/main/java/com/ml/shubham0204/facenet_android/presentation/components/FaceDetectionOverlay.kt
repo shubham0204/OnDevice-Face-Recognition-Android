@@ -8,6 +8,7 @@ import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.RectF
+import android.os.SystemClock
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.widget.FrameLayout
@@ -19,13 +20,18 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.toRectF
 import androidx.core.view.doOnLayout
 import androidx.lifecycle.LifecycleOwner
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.face.Face
-import com.google.mlkit.vision.face.FaceDetection
-import com.google.mlkit.vision.face.FaceDetectorOptions
+import com.google.mediapipe.framework.image.BitmapImageBuilder
+import com.google.mediapipe.framework.image.MPImage
+import com.google.mediapipe.tasks.components.containers.Detection
+import com.google.mediapipe.tasks.core.BaseOptions
+import com.google.mediapipe.tasks.core.Delegate
+import com.google.mediapipe.tasks.core.ErrorListener
+import com.google.mediapipe.tasks.core.OutputHandler.ResultListener
+import com.google.mediapipe.tasks.vision.core.RunningMode
+import com.google.mediapipe.tasks.vision.facedetector.FaceDetector
+import com.google.mediapipe.tasks.vision.facedetector.FaceDetectorResult
 import com.ml.shubham0204.facenet_android.presentation.screens.detect_screen.DetectScreenViewModel
 import java.util.concurrent.Executors
 import kotlinx.coroutines.CoroutineScope
@@ -41,20 +47,33 @@ class FaceDetectionOverlay(
     private val viewModel: DetectScreenViewModel
 ) : FrameLayout(context) {
 
+    private val resultListener =
+        ResultListener<FaceDetectorResult, MPImage> { result, input ->
+            CoroutineScope(Dispatchers.Default).launch { showFaces(result.detections()) }
+        }
+
+    private val errorListener = ErrorListener { it.printStackTrace() }
+
     private var overlayWidth: Int = 0
     private var overlayHeight: Int = 0
-    private val realTimeOpts =
-        FaceDetectorOptions.Builder()
-            .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
-            .setMinFaceSize(0.4f)
+    private val modelName = "blaze_face_short_range.tflite"
+    private val baseOptions =
+        BaseOptions.builder().setModelAssetPath(modelName).setDelegate(Delegate.CPU).build()
+    private val faceDetectorOptions =
+        FaceDetector.FaceDetectorOptions.builder()
+            .setBaseOptions(baseOptions)
+            .setRunningMode(RunningMode.LIVE_STREAM)
+            .setResultListener(resultListener)
+            .setErrorListener(errorListener)
             .build()
-    private val detector = FaceDetection.getClient(realTimeOpts)
+    private val faceDetector = FaceDetector.createFromOptions(context, faceDetectorOptions)
 
     private var imageTransform: Matrix = Matrix()
     private var boundingBoxTransform: Matrix = Matrix()
     private var isImageTransformedInitialized = false
     private var isBoundingBoxTransformedInitialized = false
 
+    private lateinit var frameBitmap: Bitmap
     private var isProcessing = false
     private var cameraFacing: Int = CameraSelector.LENS_FACING_BACK
     private lateinit var boundingBoxOverlay: BoundingBoxOverlay
@@ -126,7 +145,7 @@ class FaceDetectionOverlay(
             }
             isProcessing = true
 
-            var frameBitmap =
+            frameBitmap =
                 Bitmap.createBitmap(
                     image.image!!.width,
                     image.image!!.height,
@@ -137,12 +156,7 @@ class FaceDetectionOverlay(
             // Configure frameHeight and frameWidth for output2overlay transformation matrix.
             if (!isImageTransformedInitialized) {
                 imageTransform = Matrix()
-                imageTransform.apply {
-                    postRotate(image.imageInfo.rotationDegrees.toFloat())
-                    if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
-                        postScale(-1f, 1f, image.width.toFloat(), image.height.toFloat())
-                    }
-                }
+                imageTransform.apply { postRotate(image.imageInfo.rotationDegrees.toFloat()) }
                 isImageTransformedInitialized = true
             }
 
@@ -160,25 +174,30 @@ class FaceDetectionOverlay(
             if (!isBoundingBoxTransformedInitialized) {
                 boundingBoxTransform = Matrix()
                 boundingBoxTransform.apply {
-                    postScale(
+                    setScale(
                         overlayWidth / frameBitmap.width.toFloat(),
                         overlayHeight / frameBitmap.height.toFloat()
                     )
+                    if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
+                        postScale(
+                            -1f,
+                            1f,
+                            overlayWidth.toFloat() / 2.0f,
+                            overlayHeight.toFloat() / 2.0f
+                        )
+                    }
                 }
                 isBoundingBoxTransformedInitialized = true
             }
 
-            val inputImage = InputImage.fromBitmap(frameBitmap, 0)
-
-            detector
-                .process(inputImage)
-                .addOnSuccessListener { faces ->
-                    CoroutineScope(Dispatchers.Default).launch { showFaces(faces, frameBitmap) }
-                }
-                .addOnCompleteListener { image.close() }
+            faceDetector.detectAsync(
+                BitmapImageBuilder(frameBitmap).build(),
+                SystemClock.uptimeMillis()
+            )
+            image.close()
         }
 
-    private suspend fun showFaces(faces: List<Face>, frameBitmap: Bitmap) {
+    private suspend fun showFaces(faces: List<Detection>) {
         withContext(Dispatchers.Default) {
             val predictions = ArrayList<Prediction>()
             faces.forEach {
@@ -188,7 +207,7 @@ class FaceDetectionOverlay(
                     } else {
                         ""
                     }
-                val box = it.boundingBox.toRectF()
+                val box = it.boundingBox()
                 boundingBoxTransform.mapRect(box)
                 predictions.add(Prediction(box, name))
             }
@@ -213,7 +232,7 @@ class FaceDetectionOverlay(
         private val textPaint =
             Paint().apply {
                 strokeWidth = 2.0f
-                textSize = 32f
+                textSize = 36f
                 color = Color.WHITE
             }
 

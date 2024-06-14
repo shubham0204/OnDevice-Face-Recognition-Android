@@ -4,7 +4,7 @@ import android.app.Application
 import com.ml.shubham0204.facenet_android.data.ImagesVectorDB
 import com.ml.shubham0204.facenet_android.data.PersonDB
 import com.ml.shubham0204.facenet_android.domain.embeddings.FaceNet
-import com.ml.shubham0204.facenet_android.domain.face_detection.MLKitFaceDetector
+import com.ml.shubham0204.facenet_android.domain.face_detection.MediapipeFaceDetector
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -40,7 +40,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideMLKitFaceDetector(context: Application): MLKitFaceDetector {
-        return MLKitFaceDetector(context)
+    fun provideMediapipeFaceDetector(context: Application): MediapipeFaceDetector {
+        return MediapipeFaceDetector(context)
     }
 }

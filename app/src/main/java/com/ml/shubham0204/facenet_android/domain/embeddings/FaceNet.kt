@@ -2,10 +2,6 @@ package com.ml.shubham0204.facenet_android.domain.embeddings
 
 import android.content.Context
 import android.graphics.Bitmap
-import java.nio.ByteBuffer
-import kotlin.math.max
-import kotlin.math.pow
-import kotlin.math.sqrt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.tensorflow.lite.DataType
@@ -19,6 +15,10 @@ import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.image.ops.ResizeOp
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import org.tensorflow.lite.support.tensorbuffer.TensorBufferFloat
+import java.nio.ByteBuffer
+import kotlin.math.max
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 // Utility class for FaceNet model
 class FaceNet(context: Context, useGpu: Boolean = true, useXNNPack: Boolean = true) {

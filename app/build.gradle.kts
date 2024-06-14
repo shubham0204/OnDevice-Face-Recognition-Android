@@ -81,9 +81,6 @@ dependencies {
     implementation(libs.androidx.documentfile)
     implementation(libs.androidx.exifinterface)
 
-    // MLKit Face Detection
-    implementation(libs.face.detection)
-
     // Kotlin Coil
     implementation(libs.coil)
     implementation(libs.coil.compose)
@@ -92,6 +89,9 @@ dependencies {
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
+
+    // Mediapipe Face Detection
+    implementation(libs.tasks.vision)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
