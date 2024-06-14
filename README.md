@@ -18,6 +18,30 @@ $> git clone --depth=1 https://github.com/shubham0204/OnDevice-Face-Recognition-
 
 Perform a Gradle sync, and run the application.
 
+### Choosing the FaceNet model
+
+The app provides two FaceNet models differing in the size of the embedding they provide. `facenet.tflite` outputs a 128-dimensional embedding and `facenet_512.tflite` a 512-dimensional embedding. In [FaceNet.kt](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/blob/main/app/src/main/java/com/ml/shubham0204/facenet_android/domain/embeddings/FaceNet.kt), you may change the model by modifying the path of the TFLite model,
+
+```kotlin
+// facenet
+interpreter =
+    Interpreter(FileUtil.loadMappedFile(context, "facenet.tflite"), interpreterOptions)
+
+// facenet-512
+interpreter =
+            Interpreter(FileUtil.loadMappedFile(context, "facenet_512.tflite"), interpreterOptions)
+```
+
+For change `embeddingDims` in the same file,
+
+```kotlin
+// facenet
+private val embeddingDim = 512
+
+// facenet-512
+private val embeddingDim = 512
+```
+
 ## Working
 
 We use the [FaceNet](https://arxiv.org/abs/1503.03832) model, which given a 160 * 160 cropped face image, produces an embedding of 128 or 512 elements capturing facial features that uniquely identify the face. We represent the embedding model as a function $M$ that accepts a cropped face image and returns a vector/embedding/list of FP numbers.
