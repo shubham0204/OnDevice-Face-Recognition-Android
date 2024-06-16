@@ -14,6 +14,8 @@ constructor(val imageVectorUseCase: ImageVectorUseCase, val personUseCase: Perso
 
     val personFlow = personUseCase.getAll()
 
+    // Remove the person from `PersonRecord`
+    // and all associated face embeddings from `FaceImageRecord`
     fun removeFace(id: Long) {
         personUseCase.removePerson(id)
         imageVectorUseCase.removeImages(id)

@@ -18,6 +18,7 @@ class PersonDB {
         personBox.removeByIds(listOf(personID))
     }
 
+    // Returns the number of records present in the collection
     fun getCount(): Long = personBox.count()
 
     @OptIn(ExperimentalCoroutinesApi::class)

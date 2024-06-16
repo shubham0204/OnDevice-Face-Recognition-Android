@@ -20,6 +20,8 @@ import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.sqrt
 
+// Derived from the original project:
+// https://github.com/shubham0204/FaceRecognition_With_FaceNet_Android/blob/master/app/src/main/java/com/ml/quaterion/facenetdetection/model/FaceNetModel.kt
 // Utility class for FaceNet model
 class FaceNet(context: Context, useGpu: Boolean = true, useXNNPack: Boolean = true) {
 

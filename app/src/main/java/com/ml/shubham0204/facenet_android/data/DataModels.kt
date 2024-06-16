@@ -8,17 +8,31 @@ import io.objectbox.annotation.VectorDistanceType
 
 @Entity
 data class FaceImageRecord(
+    // primary-key of `FaceImageRecord`
     @Id var recordID: Long = 0,
+
+    // personId is derived from `PersonRecord`
     @Index var personID: Long = 0,
+
     var personName: String = "",
-    @HnswIndex(dimensions = 512, distanceType = VectorDistanceType.COSINE)
+
+    // the FaceNet-512 model provides a 512-dimensional embedding
+    // the FaceNet model provides a 128-dimensional embedding
+    @HnswIndex(dimensions = 512)
     var faceEmbedding: FloatArray = floatArrayOf()
 )
 
 @Entity
 data class PersonRecord(
+    // primary-key
     @Id var personID: Long = 0,
+
     var personName: String = "",
+
+    // number of images selected by the user
+    // under the name of the person
     var numImages: Long = 0,
+
+    // time when the record was added
     var addTime: Long = 0
 )

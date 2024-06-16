@@ -20,9 +20,13 @@ constructor(
     private val faceNet: FaceNet
 ) {
 
+    // Add the person's image to the database
     suspend fun addImage(personID: Long, personName: String, imageUri: Uri): Result<Boolean> {
+        // Perform face-detection and get the cropped face as a Bitmap
         val faceDetectionResult = mediapipeFaceDetector.getCroppedFace(imageUri)
         if (faceDetectionResult.isSuccess) {
+            // Get the embedding for the cropped face, and store it
+            // in the database, along with `personId` and `personName`
             val embedding = faceNet.getFaceEmbedding(faceDetectionResult.getOrNull()!!)
             imagesVectorDB.addFaceImageRecord(
                 FaceImageRecord(
@@ -37,13 +41,22 @@ constructor(
         }
     }
 
+    // From the given frame, return the name of the person by performing
+    // face recognition
     suspend fun getNearestPersonName(frameBitmap: Bitmap): String? {
+        // Perform face-detection and get the cropped face as a Bitmap
         val faceDetectionResult = mediapipeFaceDetector.getCroppedFace(frameBitmap)
         if (faceDetectionResult.isSuccess) {
+            // Get the embedding for the cropped face (query embedding)
             val embedding = faceNet.getFaceEmbedding(faceDetectionResult.getOrNull()!!)
+            // Perform nearest-neighbor search
             val recognitionResult =
                 imagesVectorDB.getNearestEmbeddingPersonName(embedding) ?: return null
+            // Calculate cosine similarity between the nearest-neighbor
+            // and the query embedding
             val distance = cosineDistance(embedding, recognitionResult.faceEmbedding)
+            // If the distance > 0.4, we recognize the person
+            // else we conclude that the face does not match enough
             return if (distance > 0.4) {
                 recognitionResult.personName
             } else {

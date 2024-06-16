@@ -56,6 +56,8 @@ class FaceDetectionOverlay(
 
     private var overlayWidth: Int = 0
     private var overlayHeight: Int = 0
+    // Initialize Mediapipe's Face Detector
+    // See // See https://ai.google.dev/edge/mediapipe/solutions/vision/face_detector/android
     private val modelName = "blaze_face_short_range.tflite"
     private val baseOptions =
         BaseOptions.builder().setModelAssetPath(modelName).setDelegate(Delegate.CPU).build()
@@ -145,6 +147,7 @@ class FaceDetectionOverlay(
             }
             isProcessing = true
 
+            // Transform android.net.Image to Bitmap
             frameBitmap =
                 Bitmap.createBitmap(
                     image.image!!.width,
@@ -153,13 +156,13 @@ class FaceDetectionOverlay(
                 )
             frameBitmap.copyPixelsFromBuffer(image.planes[0].buffer)
 
-            // Configure frameHeight and frameWidth for output2overlay transformation matrix.
+            // Configure frameHeight and frameWidth for output2overlay transformation matrix
+            // and apply it to `frameBitmap`
             if (!isImageTransformedInitialized) {
                 imageTransform = Matrix()
                 imageTransform.apply { postRotate(image.imageInfo.rotationDegrees.toFloat()) }
                 isImageTransformedInitialized = true
             }
-
             frameBitmap =
                 Bitmap.createBitmap(
                     frameBitmap,
@@ -179,6 +182,8 @@ class FaceDetectionOverlay(
                         overlayHeight / frameBitmap.height.toFloat()
                     )
                     if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
+                        // Mirror the bounding box coordinates
+                        // for front-facing cameta
                         postScale(
                             -1f,
                             1f,
