@@ -45,6 +45,9 @@ private val embeddingDim = 512
 
 ## Working
 
+![working](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/assets/41076823/def3d020-e36a-44c6-b964-866786c36e3d)
+
+
 We use the [FaceNet](https://arxiv.org/abs/1503.03832) model, which given a 160 * 160 cropped face image, produces an embedding of 128 or 512 elements capturing facial features that uniquely identify the face. We represent the embedding model as a function $M$ that accepts a cropped face image and returns a vector/embedding/list of FP numbers.
 
 1. When users select an image, the app uses MLKit's `FaceDetector` to crop faces from the image. Each image is labelled with the person's name. See [`MLKitFaceDetector.kt`](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/blob/main/app/src/main/java/com/ml/shubham0204/facenet_android/domain/face_detection/MLKitFaceDetector.kt).
