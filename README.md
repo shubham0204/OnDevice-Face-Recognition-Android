@@ -6,6 +6,7 @@
 ## Goals
 
 * Produce on-device face embeddings with FaceNet and use them to perform face recognition on a user-given set of images
+* Store face-embedding and other metadata on-device and use vector-search to determine nearest-neighbors
 * Use modern Android development practices and recommended architecture guidelines while maintaining code simplicity and modularity
 
 ## Setup
