@@ -181,7 +181,7 @@ class FaceDetectionOverlay(
                         overlayWidth / frameBitmap.width.toFloat(),
                         overlayHeight / frameBitmap.height.toFloat()
                     )
-                    if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
+                    if (cameraFacing == CameraSelector.LENS_FACING_BACK) {
                         // Mirror the bounding box coordinates
                         // for front-facing cameta
                         postScale(
