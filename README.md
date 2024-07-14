@@ -2,6 +2,9 @@
 
 > A simple Android app that performs on-device face recognition by comparing FaceNet embeddings against a vector database of user-given faces
 
+<img src="https://github.com/user-attachments/assets/3a79776c-e5dd-48c3-8b84-6ec3eaf32d2f" width="80%"/>
+
+<img src="https://github.com/user-attachments/assets/2bbdb033-e709-40f1-8326-1634768e5a3c" width="80%"/>
 
 ## Goals
 
