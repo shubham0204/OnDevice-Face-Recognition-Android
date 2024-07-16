@@ -40,10 +40,30 @@ For change `embeddingDims` in the same file,
 
 ```kotlin
 // facenet
-private val embeddingDim = 512
+private val embeddingDim = 128
 
 // facenet-512
 private val embeddingDim = 512
+```
+
+Then, in [DataModels.kt](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/blob/main/app/src/main/java/com/ml/shubham0204/facenet_android/data/DataModels.kt), change the dimensions of the `faceEmbedding` attribute,
+
+```kotlin
+@Entity
+data class FaceImageRecord(
+    // primary-key of `FaceImageRecord`
+    @Id var recordID: Long = 0,
+
+    // personId is derived from `PersonRecord`
+    @Index var personID: Long = 0,
+
+    var personName: String = "",
+
+    // the FaceNet-512 model provides a 512-dimensional embedding
+    // the FaceNet model provides a 128-dimensional embedding
+    @HnswIndex(dimensions = 512)
+    var faceEmbedding: FloatArray = floatArrayOf()
+)
 ```
 
 ## Working
