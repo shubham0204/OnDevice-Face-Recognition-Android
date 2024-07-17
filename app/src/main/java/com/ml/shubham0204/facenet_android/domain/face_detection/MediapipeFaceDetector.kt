@@ -5,8 +5,10 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.graphics.Rect
+import android.graphics.RectF
 import android.net.Uri
 import androidx.core.graphics.toRect
+import androidx.core.graphics.toRectF
 import androidx.exifinterface.media.ExifInterface
 import com.google.mediapipe.framework.image.BitmapImageBuilder
 import com.google.mediapipe.tasks.core.BaseOptions
@@ -14,11 +16,11 @@ import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.facedetector.FaceDetector
 import com.ml.shubham0204.facenet_android.domain.AppException
 import com.ml.shubham0204.facenet_android.domain.ErrorCode
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Singleton
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 // Utility class for interacting with Mediapipe's Face Detector
 // See https://ai.google.dev/edge/mediapipe/solutions/vision/face_detector/android
@@ -101,13 +103,17 @@ class MediapipeFaceDetector(private val context: Context) {
     // Similar to `getCroppedFace(Uri)`, but operates on a Bitmap,
     // performs no rotation from exif-data
     // Used by ImageVectorUseCase.kt
-    suspend fun getCroppedFace(frameBitmap: Bitmap): Result<Bitmap> =
+    suspend fun getCroppedFace(frameBitmap: Bitmap): Result<Pair<Bitmap, RectF>> =
         withContext(Dispatchers.IO) {
             val faces = faceDetector.detect(BitmapImageBuilder(frameBitmap).build()).detections()
             if (faces.size > 1) {
-                return@withContext Result.failure<Bitmap>(AppException(ErrorCode.MULTIPLE_FACES))
+                return@withContext Result.failure<Pair<Bitmap, RectF>>(
+                    AppException(ErrorCode.MULTIPLE_FACES)
+                )
             } else if (faces.size == 0) {
-                return@withContext Result.failure<Bitmap>(AppException(ErrorCode.NO_FACE))
+                return@withContext Result.failure<Pair<Bitmap, RectF>>(
+                    AppException(ErrorCode.NO_FACE)
+                )
             } else {
                 val rect = faces[0].boundingBox().toRect()
                 if (validateRect(frameBitmap, rect)) {
@@ -119,13 +125,38 @@ class MediapipeFaceDetector(private val context: Context) {
                             rect.width(),
                             rect.height()
                         )
-                    return@withContext Result.success(croppedBitmap)
+                    return@withContext Result.success<Pair<Bitmap, RectF>>(
+                        Pair(croppedBitmap, rect.toRectF())
+                    )
                 } else {
-                    return@withContext Result.failure<Bitmap>(
+                    return@withContext Result.failure<Pair<Bitmap, RectF>>(
                         AppException(ErrorCode.FACE_DETECTOR_FAILURE)
                     )
                 }
             }
+        }
+
+    // Detects multiple faces from the `frameBitmap`
+    // and returns pairs of (croppedFace , boundingBoxRect)
+    // Used by ImageVectorUseCase.kt
+    suspend fun getAllCroppedFaces(frameBitmap: Bitmap): List<Pair<Bitmap, Rect>> =
+        withContext(Dispatchers.IO) {
+            return@withContext faceDetector
+                .detect(BitmapImageBuilder(frameBitmap).build())
+                .detections()
+                .filter { validateRect(frameBitmap, it.boundingBox().toRect()) }
+                .map { detection -> detection.boundingBox().toRect() }
+                .map { rect ->
+                    val croppedBitmap =
+                        Bitmap.createBitmap(
+                            frameBitmap,
+                            rect.left,
+                            rect.top,
+                            rect.width(),
+                            rect.height()
+                        )
+                    Pair(croppedBitmap, rect)
+                }
         }
 
     // DEBUG: For testing purpose, saves the Bitmap to the app's private storage

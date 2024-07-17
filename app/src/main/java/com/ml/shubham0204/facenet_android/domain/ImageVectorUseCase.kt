@@ -1,6 +1,7 @@
 package com.ml.shubham0204.facenet_android.domain
 
 import android.graphics.Bitmap
+import android.graphics.Rect
 import android.net.Uri
 import com.ml.shubham0204.facenet_android.data.FaceImageRecord
 import com.ml.shubham0204.facenet_android.data.ImagesVectorDB
@@ -43,28 +44,32 @@ constructor(
 
     // From the given frame, return the name of the person by performing
     // face recognition
-    suspend fun getNearestPersonName(frameBitmap: Bitmap): String? {
+    suspend fun getNearestPersonName(frameBitmap: Bitmap): List<Pair<String, Rect>> {
         // Perform face-detection and get the cropped face as a Bitmap
-        val faceDetectionResult = mediapipeFaceDetector.getCroppedFace(frameBitmap)
-        if (faceDetectionResult.isSuccess) {
+        val faceDetectionResult = mediapipeFaceDetector.getAllCroppedFaces(frameBitmap)
+        val faceRecognitionResults = ArrayList<Pair<String, Rect>>()
+        for (result in faceDetectionResult) {
             // Get the embedding for the cropped face (query embedding)
-            val embedding = faceNet.getFaceEmbedding(faceDetectionResult.getOrNull()!!)
+            val (croppedBitmap, boundingBox) = result
+            val embedding = faceNet.getFaceEmbedding(croppedBitmap)
             // Perform nearest-neighbor search
-            val recognitionResult =
-                imagesVectorDB.getNearestEmbeddingPersonName(embedding) ?: return null
+            val recognitionResult = imagesVectorDB.getNearestEmbeddingPersonName(embedding)
+            if (recognitionResult == null) {
+                faceRecognitionResults.add(Pair("Not recognized", boundingBox))
+                continue
+            }
             // Calculate cosine similarity between the nearest-neighbor
             // and the query embedding
             val distance = cosineDistance(embedding, recognitionResult.faceEmbedding)
             // If the distance > 0.4, we recognize the person
             // else we conclude that the face does not match enough
-            return if (distance > 0.4) {
-                recognitionResult.personName
+            if (distance > 0.4) {
+                faceRecognitionResults.add(Pair(recognitionResult.personName, boundingBox))
             } else {
-                "Not recognized"
+                faceRecognitionResults.add(Pair("Not recognized", boundingBox))
             }
-        } else {
-            return null
         }
+        return faceRecognitionResults
     }
 
     private fun cosineDistance(x1: FloatArray, x2: FloatArray): Float {
