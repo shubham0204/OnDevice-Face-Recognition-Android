@@ -5,10 +5,8 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.graphics.Rect
-import android.graphics.RectF
 import android.net.Uri
 import androidx.core.graphics.toRect
-import androidx.core.graphics.toRectF
 import androidx.exifinterface.media.ExifInterface
 import com.google.mediapipe.framework.image.BitmapImageBuilder
 import com.google.mediapipe.tasks.core.BaseOptions
@@ -94,42 +92,6 @@ class MediapipeFaceDetector(private val context: Context) {
                     return@withContext Result.success(croppedBitmap)
                 } else {
                     return@withContext Result.failure<Bitmap>(
-                        AppException(ErrorCode.FACE_DETECTOR_FAILURE)
-                    )
-                }
-            }
-        }
-
-    // Similar to `getCroppedFace(Uri)`, but operates on a Bitmap,
-    // performs no rotation from exif-data
-    // Used by ImageVectorUseCase.kt
-    suspend fun getCroppedFace(frameBitmap: Bitmap): Result<Pair<Bitmap, RectF>> =
-        withContext(Dispatchers.IO) {
-            val faces = faceDetector.detect(BitmapImageBuilder(frameBitmap).build()).detections()
-            if (faces.size > 1) {
-                return@withContext Result.failure<Pair<Bitmap, RectF>>(
-                    AppException(ErrorCode.MULTIPLE_FACES)
-                )
-            } else if (faces.size == 0) {
-                return@withContext Result.failure<Pair<Bitmap, RectF>>(
-                    AppException(ErrorCode.NO_FACE)
-                )
-            } else {
-                val rect = faces[0].boundingBox().toRect()
-                if (validateRect(frameBitmap, rect)) {
-                    val croppedBitmap =
-                        Bitmap.createBitmap(
-                            frameBitmap,
-                            rect.left,
-                            rect.top,
-                            rect.width(),
-                            rect.height()
-                        )
-                    return@withContext Result.success<Pair<Bitmap, RectF>>(
-                        Pair(croppedBitmap, rect.toRectF())
-                    )
-                } else {
-                    return@withContext Result.failure<Pair<Bitmap, RectF>>(
                         AppException(ErrorCode.FACE_DETECTOR_FAILURE)
                     )
                 }

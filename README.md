@@ -6,6 +6,10 @@
 
 <img src="https://github.com/user-attachments/assets/2bbdb033-e709-40f1-8326-1634768e5a3c" width="80%"/>
 
+## Updates
+
+* 26-07-2024: Add latency metrics on the main screen. It shows the time taken (in milliseconds) to perform face detection, face embedding and vector search.
+
 ## Goals
 
 * Produce on-device face embeddings with FaceNet and use them to perform face recognition on a user-given set of images

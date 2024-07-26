@@ -5,12 +5,15 @@ import android.graphics.Rect
 import android.net.Uri
 import com.ml.shubham0204.facenet_android.data.FaceImageRecord
 import com.ml.shubham0204.facenet_android.data.ImagesVectorDB
+import com.ml.shubham0204.facenet_android.data.RecognitionMetrics
 import com.ml.shubham0204.facenet_android.domain.embeddings.FaceNet
 import com.ml.shubham0204.facenet_android.domain.face_detection.MediapipeFaceDetector
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.pow
 import kotlin.math.sqrt
+import kotlin.time.DurationUnit
+import kotlin.time.measureTimedValue
 
 @Singleton
 class ImageVectorUseCase
@@ -44,16 +47,24 @@ constructor(
 
     // From the given frame, return the name of the person by performing
     // face recognition
-    suspend fun getNearestPersonName(frameBitmap: Bitmap): List<Pair<String, Rect>> {
+    suspend fun getNearestPersonName(
+        frameBitmap: Bitmap
+    ): Pair<RecognitionMetrics?, List<Pair<String, Rect>>> {
         // Perform face-detection and get the cropped face as a Bitmap
-        val faceDetectionResult = mediapipeFaceDetector.getAllCroppedFaces(frameBitmap)
+        val (faceDetectionResult, t1) =
+            measureTimedValue { mediapipeFaceDetector.getAllCroppedFaces(frameBitmap) }
         val faceRecognitionResults = ArrayList<Pair<String, Rect>>()
+        var avgT2 = 0L
+        var avgT3 = 0L
         for (result in faceDetectionResult) {
             // Get the embedding for the cropped face (query embedding)
             val (croppedBitmap, boundingBox) = result
-            val embedding = faceNet.getFaceEmbedding(croppedBitmap)
+            val (embedding, t2) = measureTimedValue { faceNet.getFaceEmbedding(croppedBitmap) }
+            avgT2 += t2.toLong(DurationUnit.MILLISECONDS)
             // Perform nearest-neighbor search
-            val recognitionResult = imagesVectorDB.getNearestEmbeddingPersonName(embedding)
+            val (recognitionResult, t3) =
+                measureTimedValue { imagesVectorDB.getNearestEmbeddingPersonName(embedding) }
+            avgT3 += t3.toLong(DurationUnit.MILLISECONDS)
             if (recognitionResult == null) {
                 faceRecognitionResults.add(Pair("Not recognized", boundingBox))
                 continue
@@ -69,7 +80,18 @@ constructor(
                 faceRecognitionResults.add(Pair("Not recognized", boundingBox))
             }
         }
-        return faceRecognitionResults
+        val metrics =
+            if (faceDetectionResult.isNotEmpty()) {
+                RecognitionMetrics(
+                    timeFaceDetection = t1.toLong(DurationUnit.MILLISECONDS),
+                    timeFaceEmbedding = avgT2 / faceDetectionResult.size,
+                    timeVectorSearch = avgT3 / faceDetectionResult.size
+                )
+            } else {
+                null
+            }
+
+        return Pair(metrics, faceRecognitionResults)
     }
 
     private fun cosineDistance(x1: FloatArray, x2: FloatArray): Float {

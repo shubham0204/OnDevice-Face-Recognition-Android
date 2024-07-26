@@ -32,3 +32,9 @@ data class PersonRecord(
     // time when the record was added
     var addTime: Long = 0
 )
+
+data class RecognitionMetrics(
+    val timeFaceDetection: Long,
+    val timeVectorSearch: Long,
+    val timeFaceEmbedding: Long
+)

@@ -12,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -106,22 +107,38 @@ private fun ScreenUI() {
     Box {
         Camera(viewModel)
         DelayedVisibility(viewModel.getNumPeople() > 0) {
-            Text(
-                text = "Recognition on ${viewModel.getNumPeople()} face(s)",
-                color = Color.White,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
-            )
+            val metrics by remember{ viewModel.faceDetectionMetricsState }
+            Column {
+                Text(
+                    text = "Recognition on ${viewModel.getNumPeople()} face(s)",
+                    color = Color.White,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                metrics?.let {
+                    Text(
+                        text = "face detection: ${it.timeFaceDetection} ms" +
+                                "\nface embedding: ${it.timeFaceEmbedding} ms\nvector search: ${it.timeVectorSearch} ms",
+                        color = Color.White,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 24.dp),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
         }
         DelayedVisibility(viewModel.getNumPeople() == 0L) {
             Text(
                 text = "No images in database",
                 color = Color.White,
                 modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .background(Color.Blue, RoundedCornerShape(16.dp))
-                        .padding(8.dp),
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .background(Color.Blue, RoundedCornerShape(16.dp))
+                    .padding(8.dp),
                 textAlign = TextAlign.Center
             )
         }

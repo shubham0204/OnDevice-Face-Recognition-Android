@@ -166,7 +166,8 @@ class FaceDetectionOverlay(
             }
             CoroutineScope(Dispatchers.Default).launch {
                 val predictions = ArrayList<Prediction>()
-                viewModel.imageVectorUseCase.getNearestPersonName(frameBitmap).forEach {
+                val (metrics, results) = viewModel.imageVectorUseCase.getNearestPersonName(frameBitmap)
+                results.forEach {
                     (name, boundingBox) ->
                     val box = boundingBox.toRectF()
                     var personName = name
@@ -177,6 +178,7 @@ class FaceDetectionOverlay(
                     predictions.add(Prediction(box, personName))
                 }
                 withContext(Dispatchers.Main) {
+                    viewModel.faceDetectionMetricsState.value = metrics
                     this@FaceDetectionOverlay.predictions = predictions.toTypedArray()
                     boundingBoxOverlay.invalidate()
                     isProcessing = false
