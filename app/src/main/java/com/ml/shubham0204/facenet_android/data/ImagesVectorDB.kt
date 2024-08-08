@@ -1,5 +1,8 @@
 package com.ml.shubham0204.facenet_android.data
 
+import org.koin.core.annotation.Single
+
+@Single
 class ImagesVectorDB {
 
     private val imagesBox = ObjectBoxStore.store.boxFor(FaceImageRecord::class.java)

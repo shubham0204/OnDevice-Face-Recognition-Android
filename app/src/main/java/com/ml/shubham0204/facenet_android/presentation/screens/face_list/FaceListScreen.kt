@@ -33,11 +33,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.ml.shubham0204.facenet_android.data.PersonRecord
 import com.ml.shubham0204.facenet_android.presentation.components.AppAlertDialog
 import com.ml.shubham0204.facenet_android.presentation.components.createAlertDialog
 import com.ml.shubham0204.facenet_android.presentation.theme.FaceNetAndroidTheme
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,7 +66,7 @@ fun FaceListScreen(onNavigateBack: (() -> Unit), onAddFaceClick: (() -> Unit)) {
                 }
             }
         ) { innerPadding ->
-            val viewModel: FaceListScreenViewModel = hiltViewModel()
+            val viewModel: FaceListScreenViewModel = koinViewModel()
             Column(modifier = Modifier.padding(innerPadding)) {
                 ScreenUI(viewModel)
                 AppAlertDialog()
