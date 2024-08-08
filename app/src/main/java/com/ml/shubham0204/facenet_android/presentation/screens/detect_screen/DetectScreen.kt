@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
 import androidx.camera.core.CameraSelector
+
 import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -44,13 +45,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.ml.shubham0204.facenet_android.R
 import com.ml.shubham0204.facenet_android.presentation.components.AppAlertDialog
 import com.ml.shubham0204.facenet_android.presentation.components.DelayedVisibility
 import com.ml.shubham0204.facenet_android.presentation.components.FaceDetectionOverlay
 import com.ml.shubham0204.facenet_android.presentation.components.createAlertDialog
 import com.ml.shubham0204.facenet_android.presentation.theme.FaceNetAndroidTheme
+import org.koin.androidx.compose.koinViewModel
 
 private val cameraPermissionStatus = mutableStateOf(false)
 private val cameraFacing = mutableIntStateOf(CameraSelector.LENS_FACING_BACK)
@@ -103,7 +104,7 @@ fun DetectScreen(onOpenFaceListClick: (() -> Unit)) {
 
 @Composable
 private fun ScreenUI() {
-    val viewModel: DetectScreenViewModel = hiltViewModel()
+    val viewModel: DetectScreenViewModel = koinViewModel()
     Box {
         Camera(viewModel)
         DelayedVisibility(viewModel.getNumPeople() > 0) {

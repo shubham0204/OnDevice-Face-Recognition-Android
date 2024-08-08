@@ -8,6 +8,7 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.koin.core.annotation.Single
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.CompatibilityList
@@ -23,6 +24,7 @@ import org.tensorflow.lite.support.tensorbuffer.TensorBufferFloat
 // Derived from the original project:
 // https://github.com/shubham0204/FaceRecognition_With_FaceNet_Android/blob/master/app/src/main/java/com/ml/quaterion/facenetdetection/model/FaceNetModel.kt
 // Utility class for FaceNet model
+@Single
 class FaceNet(context: Context, useGpu: Boolean = true, useXNNPack: Boolean = true) {
 
     // Input image size for FaceNet model.

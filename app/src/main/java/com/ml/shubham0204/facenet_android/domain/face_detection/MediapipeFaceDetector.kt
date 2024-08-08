@@ -14,15 +14,15 @@ import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.facedetector.FaceDetector
 import com.ml.shubham0204.facenet_android.domain.AppException
 import com.ml.shubham0204.facenet_android.domain.ErrorCode
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
-import javax.inject.Singleton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.koin.core.annotation.Single
 
 // Utility class for interacting with Mediapipe's Face Detector
 // See https://ai.google.dev/edge/mediapipe/solutions/vision/face_detector/android
-@Singleton
+@Single
 class MediapipeFaceDetector(private val context: Context) {
 
     // The model is stored in the assets folder
