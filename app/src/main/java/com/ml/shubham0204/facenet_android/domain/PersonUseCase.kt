@@ -2,12 +2,11 @@ package com.ml.shubham0204.facenet_android.domain
 
 import com.ml.shubham0204.facenet_android.data.PersonDB
 import com.ml.shubham0204.facenet_android.data.PersonRecord
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
+import org.koin.core.annotation.Single
 
-@Singleton
-class PersonUseCase @Inject constructor(private val personDB: PersonDB) {
+@Single
+class PersonUseCase(private val personDB: PersonDB) {
 
     fun addPerson(name: String, numImages: Long): Long {
         return personDB.addPerson(

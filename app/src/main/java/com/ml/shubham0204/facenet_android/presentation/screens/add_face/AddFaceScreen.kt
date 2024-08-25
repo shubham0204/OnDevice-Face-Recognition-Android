@@ -34,13 +34,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.ml.shubham0204.facenet_android.presentation.components.AppProgressDialog
 import com.ml.shubham0204.facenet_android.presentation.components.DelayedVisibility
 import com.ml.shubham0204.facenet_android.presentation.components.hideProgressDialog
 import com.ml.shubham0204.facenet_android.presentation.components.showProgressDialog
 import com.ml.shubham0204.facenet_android.presentation.theme.FaceNetAndroidTheme
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,7 +65,7 @@ fun AddFaceScreen(onNavigateBack: (() -> Unit)) {
             }
         ) { innerPadding ->
             Column(modifier = Modifier.padding(innerPadding)) {
-                val viewModel: AddFaceScreenViewModel = hiltViewModel()
+                val viewModel: AddFaceScreenViewModel = koinViewModel()
                 ScreenUI(viewModel)
                 ImageReadProgressDialog(viewModel, onNavigateBack)
             }

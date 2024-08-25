@@ -2,8 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.compose.compiler)
-    kotlin("kapt")
-    id("com.google.dagger.hilt.android")
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -47,6 +46,17 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    applicationVariants.configureEach {
+        kotlin.sourceSets {
+            getByName(name) {
+                kotlin.srcDir("build/generated/ksp/$name/kotlin")
+            }
+        }
+    }
+}
+
+ksp {
+    arg("KOIN_CONFIG_CHECK","true")
 }
 
 dependencies {
@@ -66,10 +76,11 @@ dependencies {
     debugImplementation("io.objectbox:objectbox-android-objectbrowser:4.0.0")
     releaseImplementation("io.objectbox:objectbox-android:4.0.0")
 
-    // Hilt for dependency injection
-    implementation(libs.hilt.android)
-    kapt(libs.hilt.android.compiler)
-    implementation(libs.hilt.navigation.compose)
+    // dependency injection
+    implementation(libs.koin.android)
+    implementation(libs.koin.annotations)
+    implementation(libs.koin.androidx.compose)
+    ksp(libs.koin.ksp.compiler)
 
     // TensorFlow Lite dependencies
     implementation(libs.tensorflow.lite)

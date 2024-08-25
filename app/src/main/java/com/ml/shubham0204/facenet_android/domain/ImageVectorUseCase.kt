@@ -8,17 +8,14 @@ import com.ml.shubham0204.facenet_android.data.ImagesVectorDB
 import com.ml.shubham0204.facenet_android.data.RecognitionMetrics
 import com.ml.shubham0204.facenet_android.domain.embeddings.FaceNet
 import com.ml.shubham0204.facenet_android.domain.face_detection.MediapipeFaceDetector
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.time.DurationUnit
 import kotlin.time.measureTimedValue
+import org.koin.core.annotation.Single
 
-@Singleton
-class ImageVectorUseCase
-@Inject
-constructor(
+@Single
+class ImageVectorUseCase(
     private val mediapipeFaceDetector: MediapipeFaceDetector,
     private val imagesVectorDB: ImagesVectorDB,
     private val faceNet: FaceNet
