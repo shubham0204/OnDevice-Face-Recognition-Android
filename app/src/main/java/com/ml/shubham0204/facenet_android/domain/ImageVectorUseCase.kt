@@ -7,6 +7,7 @@ import com.ml.shubham0204.facenet_android.data.FaceImageRecord
 import com.ml.shubham0204.facenet_android.data.ImagesVectorDB
 import com.ml.shubham0204.facenet_android.data.RecognitionMetrics
 import com.ml.shubham0204.facenet_android.domain.embeddings.FaceNet
+import com.ml.shubham0204.facenet_android.domain.face_detection.FaceSpoofDetector
 import com.ml.shubham0204.facenet_android.domain.face_detection.MediapipeFaceDetector
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -17,9 +18,16 @@ import org.koin.core.annotation.Single
 @Single
 class ImageVectorUseCase(
     private val mediapipeFaceDetector: MediapipeFaceDetector,
+    private val faceSpoofDetector: FaceSpoofDetector,
     private val imagesVectorDB: ImagesVectorDB,
     private val faceNet: FaceNet
 ) {
+
+    data class FaceRecognitionResult(
+        val personName: String,
+        val boundingBox: Rect,
+        val spoofResult: FaceSpoofDetector.FaceSpoofResult? = null
+    )
 
     // Add the person's image to the database
     suspend fun addImage(personID: Long, personName: String, imageUri: Uri): Result<Boolean> {
@@ -46,13 +54,15 @@ class ImageVectorUseCase(
     // face recognition
     suspend fun getNearestPersonName(
         frameBitmap: Bitmap
-    ): Pair<RecognitionMetrics?, List<Pair<String, Rect>>> {
+    ): Pair<RecognitionMetrics?, List<FaceRecognitionResult>> {
         // Perform face-detection and get the cropped face as a Bitmap
         val (faceDetectionResult, t1) =
             measureTimedValue { mediapipeFaceDetector.getAllCroppedFaces(frameBitmap) }
-        val faceRecognitionResults = ArrayList<Pair<String, Rect>>()
+        val faceRecognitionResults = ArrayList<FaceRecognitionResult>()
         var avgT2 = 0L
         var avgT3 = 0L
+        var avgT4 = 0L
+
         for (result in faceDetectionResult) {
             // Get the embedding for the cropped face (query embedding)
             val (croppedBitmap, boundingBox) = result
@@ -63,18 +73,26 @@ class ImageVectorUseCase(
                 measureTimedValue { imagesVectorDB.getNearestEmbeddingPersonName(embedding) }
             avgT3 += t3.toLong(DurationUnit.MILLISECONDS)
             if (recognitionResult == null) {
-                faceRecognitionResults.add(Pair("Not recognized", boundingBox))
+                faceRecognitionResults.add(FaceRecognitionResult("Not recognized", boundingBox))
                 continue
             }
+
+            val spoofResult = faceSpoofDetector.detectSpoof(frameBitmap, boundingBox)
+            avgT4 += spoofResult.timeMillis
+
             // Calculate cosine similarity between the nearest-neighbor
             // and the query embedding
             val distance = cosineDistance(embedding, recognitionResult.faceEmbedding)
             // If the distance > 0.4, we recognize the person
             // else we conclude that the face does not match enough
             if (distance > 0.4) {
-                faceRecognitionResults.add(Pair(recognitionResult.personName, boundingBox))
+                faceRecognitionResults.add(
+                    FaceRecognitionResult(recognitionResult.personName, boundingBox, spoofResult)
+                )
             } else {
-                faceRecognitionResults.add(Pair("Not recognized", boundingBox))
+                faceRecognitionResults.add(
+                    FaceRecognitionResult("Not recognized", boundingBox, spoofResult)
+                )
             }
         }
         val metrics =
@@ -82,7 +100,8 @@ class ImageVectorUseCase(
                 RecognitionMetrics(
                     timeFaceDetection = t1.toLong(DurationUnit.MILLISECONDS),
                     timeFaceEmbedding = avgT2 / faceDetectionResult.size,
-                    timeVectorSearch = avgT3 / faceDetectionResult.size
+                    timeVectorSearch = avgT3 / faceDetectionResult.size,
+                    timeFaceSpoofDetection = avgT4 / faceDetectionResult.size
                 )
             } else {
                 null

@@ -120,7 +120,9 @@ private fun ScreenUI() {
                 metrics?.let {
                     Text(
                         text = "face detection: ${it.timeFaceDetection} ms" +
-                                "\nface embedding: ${it.timeFaceEmbedding} ms\nvector search: ${it.timeVectorSearch} ms",
+                                "\nface embedding: ${it.timeFaceEmbedding} ms" +
+                                "\nvector search: ${it.timeVectorSearch} ms\n" +
+                                "spoof detection: ${it.timeFaceSpoofDetection} ms",
                         color = Color.White,
                         modifier = Modifier
                             .fillMaxWidth()

@@ -168,11 +168,14 @@ class FaceDetectionOverlay(
                 val predictions = ArrayList<Prediction>()
                 val (metrics, results) = viewModel.imageVectorUseCase.getNearestPersonName(frameBitmap)
                 results.forEach {
-                    (name, boundingBox) ->
+                    (name, boundingBox, spoofResult) ->
                     val box = boundingBox.toRectF()
                     var personName = name
                     if (viewModel.getNumPeople().toInt() == 0) {
                         personName = ""
+                    }
+                    if (spoofResult != null && spoofResult.isSpoof) {
+                        personName = "$personName (Spoof: ${spoofResult.score})"
                     }
                     boundingBoxTransform.mapRect(box)
                     predictions.add(Prediction(box, personName))
@@ -187,7 +190,7 @@ class FaceDetectionOverlay(
             image.close()
         }
 
-    data class Prediction(var bbox: RectF, var label: String, var maskLabel: String = "")
+    data class Prediction(var bbox: RectF, var label: String)
 
     inner class BoundingBoxOverlay(context: Context) :
         SurfaceView(context), SurfaceHolder.Callback {

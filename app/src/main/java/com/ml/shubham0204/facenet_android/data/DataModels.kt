@@ -36,5 +36,6 @@ data class PersonRecord(
 data class RecognitionMetrics(
     val timeFaceDetection: Long,
     val timeVectorSearch: Long,
-    val timeFaceEmbedding: Long
+    val timeFaceEmbedding: Long,
+    val timeFaceSpoofDetection: Long
 )
