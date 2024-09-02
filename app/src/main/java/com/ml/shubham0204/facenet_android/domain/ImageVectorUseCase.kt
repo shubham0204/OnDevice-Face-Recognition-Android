@@ -61,6 +61,7 @@ class ImageVectorUseCase(
         val faceRecognitionResults = ArrayList<FaceRecognitionResult>()
         var avgT2 = 0L
         var avgT3 = 0L
+        var avgT4 = 0L
 
         for (result in faceDetectionResult) {
             // Get the embedding for the cropped face (query embedding)
@@ -77,6 +78,7 @@ class ImageVectorUseCase(
             }
 
             val spoofResult = faceSpoofDetector.detectSpoof(frameBitmap, boundingBox)
+            avgT4 += spoofResult.timeMillis
 
             // Calculate cosine similarity between the nearest-neighbor
             // and the query embedding
@@ -98,7 +100,8 @@ class ImageVectorUseCase(
                 RecognitionMetrics(
                     timeFaceDetection = t1.toLong(DurationUnit.MILLISECONDS),
                     timeFaceEmbedding = avgT2 / faceDetectionResult.size,
-                    timeVectorSearch = avgT3 / faceDetectionResult.size
+                    timeVectorSearch = avgT3 / faceDetectionResult.size,
+                    timeFaceSpoofDetection = avgT4 / faceDetectionResult.size
                 )
             } else {
                 null

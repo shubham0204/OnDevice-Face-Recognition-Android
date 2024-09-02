@@ -2,7 +2,10 @@ package com.ml.shubham0204.facenet_android.domain.face_detection
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.Rect
+import androidx.core.graphics.get
+import androidx.core.graphics.set
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
@@ -15,11 +18,25 @@ import org.tensorflow.lite.support.common.ops.CastOp
 import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
 import kotlin.math.exp
+import kotlin.time.DurationUnit
+import kotlin.time.measureTime
 
+/*
+
+Utility class for interacting with FaceSpoofDetector
+
+- It uses the MiniFASNet model from https://github.com/minivision-ai/Silent-Face-Anti-Spoofing
+- The preprocessing methods are derived from
+https://github.com/serengil/deepface/blob/master/deepface/models/spoofing/FasNet.py
+- The model weights are in the PyTorch format. To convert them to the TFLite format,
+  check the notebook linked in the README of the project
+- An instance of this class is injected in ImageVectorUseCase.kt
+
+*/
 @Single
 class FaceSpoofDetector(context: Context, useGpu: Boolean = false, useXNNPack: Boolean = false) {
 
-    data class FaceSpoofResult(val isSpoof: Boolean, val score: Float)
+    data class FaceSpoofResult(val isSpoof: Boolean, val score: Float, val timeMillis: Long)
 
     private val scale1 = 2.7f
     private val scale2 = 4.0f
@@ -50,13 +67,16 @@ class FaceSpoofDetector(context: Context, useGpu: Boolean = false, useXNNPack: B
                 useNNAPI = true
             }
         firstModelInterpreter =
-            Interpreter(FileUtil.loadMappedFile(context, "first_model.tflite"), interpreterOptions)
+            Interpreter(FileUtil.loadMappedFile(context, "spoof_model_scale_2_7.tflite"), interpreterOptions)
         secondModelInterpreter =
-            Interpreter(FileUtil.loadMappedFile(context, "second_model.tflite"), interpreterOptions)
+            Interpreter(FileUtil.loadMappedFile(context, "spoof_model_scale_4_0.tflite"), interpreterOptions)
     }
 
     suspend fun detectSpoof(frameImage: Bitmap, faceRect: Rect): FaceSpoofResult =
         withContext(Dispatchers.Default) {
+            // Crop the images and scale the bounding boxes
+            // with the given two constants
+            // and perform RGB -> BGR conversion
             val croppedImage1 =
                 crop(
                     origImage = frameImage,
@@ -65,6 +85,15 @@ class FaceSpoofDetector(context: Context, useGpu: Boolean = false, useXNNPack: B
                     targetWidth = inputImageDim,
                     targetHeight = inputImageDim
                 )
+            for (i in 0 until croppedImage1.width) {
+                for (j in 0 until croppedImage1.height) {
+                    croppedImage1[i, j] = Color.rgb(
+                        Color.blue(croppedImage1[i, j]),
+                        Color.green(croppedImage1[i, j]),
+                        Color.red(croppedImage1[i, j])
+                    )
+                }
+            }
             val croppedImage2 =
                 crop(
                     origImage = frameImage,
@@ -73,14 +102,24 @@ class FaceSpoofDetector(context: Context, useGpu: Boolean = false, useXNNPack: B
                     targetWidth = inputImageDim,
                     targetHeight = inputImageDim
                 )
-
+            for (i in 0 until croppedImage2.width) {
+                for (j in 0 until croppedImage2.height) {
+                    croppedImage2[i, j] = Color.rgb(
+                        Color.blue(croppedImage2[i, j]),
+                        Color.green(croppedImage2[i, j]),
+                        Color.red(croppedImage2[i, j])
+                    )
+                }
+            }
             val input1 = imageTensorProcessor.process(TensorImage.fromBitmap(croppedImage1)).buffer
             val input2 = imageTensorProcessor.process(TensorImage.fromBitmap(croppedImage2)).buffer
             val output1 = arrayOf(FloatArray(outputDim))
             val output2 = arrayOf(FloatArray(outputDim))
 
-            firstModelInterpreter.run(input1, output1)
-            secondModelInterpreter.run(input2, output2)
+            val time = measureTime {
+                firstModelInterpreter.run(input1, output1)
+                secondModelInterpreter.run(input2, output2)
+            }.toLong(DurationUnit.MILLISECONDS)
 
             val output = softMax(output1[0]).zip(softMax(output2[0])).map {
                 (it.first + it.second)
@@ -89,8 +128,7 @@ class FaceSpoofDetector(context: Context, useGpu: Boolean = false, useXNNPack: B
             val iSpoof = label != 1
             val score = output[label] / 2f
 
-
-            return@withContext FaceSpoofResult(isSpoof = iSpoof, score = score)
+            return@withContext FaceSpoofResult(isSpoof = iSpoof, score = score, timeMillis = time)
         }
 
     private fun softMax(x: FloatArray): FloatArray {

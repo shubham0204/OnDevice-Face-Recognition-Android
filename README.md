@@ -8,7 +8,8 @@
 
 ## Updates
 
-* 26-07-2024: Add latency metrics on the main screen. It shows the time taken (in milliseconds) to perform face detection, face embedding and vector search.
+* 2024-09: Add face-spoof detection which uses FASNet from [minivision-ai/Silent-Face-Anti-Spoofing](https://github.com/minivision-ai/Silent-Face-Anti-Spoofing)
+* 2024-07: Add latency metrics on the main screen. It shows the time taken (in milliseconds) to perform face detection, face embedding and vector search.
 
 ## Goals
 
@@ -90,6 +91,18 @@ We use the [FaceNet](https://arxiv.org/abs/1503.03832) model, which given a 160 
 3. [ObjectBox](https://objectbox.io) for on-device vector-store and NoSQL database
 
 ## Discussion
+
+### Implementing face-liveness detection
+
+> See [issue #1](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/issues/1)
+
+Face-liveness detection is the process of determining if the face captured in the camera frame is real or a spoof (photo, 3D model etc.). There are many techniques to perform face-liveness detection, the simplest ones being smile or wink detection. These are effective against static spoofs (pictures or 3D models) but do not hold for videos. 
+
+While exploring the [deepface](https://github.com/serengil/deepface) library, I discovered that it had implemented an *anti-spoof* detection system using the PyTorch models from [Silent-Face-Anti-Spoofing](https://github.com/minivision-ai/Silent-Face-Anti-Spoofing) repository. It uses the combination of two models that operate on two different scales of the same image. The model is penalized for classification-loss (cross-entropy loss) and the difference between the Fourier transform and the intermediate features from the CNN.
+
+The models used by the `deepface` library (same as in the `Silent-Face-Anti-Spoofing`) are in the PyTorch format. The project already uses the TFLite runtime for executing the FaceNet model, and adding any other DL runtime would lead to unnecessary bloating of the application. 
+
+I converted the PT models to TFLite using this notebook: https://github.com/shubham0204/OnDevice-Face-Recognition-Android/blob/main/resources/Liveness_PT_Model_to_TF.ipynb
 
 ### How does this project differ from my earlier [`FaceRecognition_With_FaceNet_Android`](https://github.com/shubham0204/FaceRecognition_With_FaceNet_Android) project?
 
