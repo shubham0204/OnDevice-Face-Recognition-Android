@@ -6,6 +6,8 @@
 
 <img src="https://github.com/user-attachments/assets/2bbdb033-e709-40f1-8326-1634768e5a3c" width="80%"/>
 
+> Download the APK from the [Releases](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/releases)
+
 ## Updates
 
 * 2024-09: Add face-spoof detection which uses FASNet from [minivision-ai/Silent-Face-Anti-Spoofing](https://github.com/minivision-ai/Silent-Face-Anti-Spoofing)
@@ -18,6 +20,8 @@
 * Use modern Android development practices and recommended architecture guidelines while maintaining code simplicity and modularity
 
 ## Setup
+
+> Download the APK from the [Releases](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/releases)
 
 Clone the `main` branch,
 
