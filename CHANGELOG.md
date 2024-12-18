@@ -1,0 +1,2 @@
+- Initial release of `FaceNet-Android`
+- The app allows the users to add new faces to the database and recognize them in real-time.
