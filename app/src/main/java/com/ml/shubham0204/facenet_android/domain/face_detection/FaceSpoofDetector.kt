@@ -34,7 +34,7 @@ https://github.com/serengil/deepface/blob/master/deepface/models/spoofing/FasNet
 
 */
 @Single
-class FaceSpoofDetector(context: Context, useGpu: Boolean = false, useXNNPack: Boolean = false) {
+class FaceSpoofDetector(context: Context, useGpu: Boolean = false, useXNNPack: Boolean = false, useNNAPI: Boolean = false) {
 
     data class FaceSpoofResult(val isSpoof: Boolean, val score: Float, val timeMillis: Long)
 
@@ -64,7 +64,7 @@ class FaceSpoofDetector(context: Context, useGpu: Boolean = false, useXNNPack: B
                     numThreads = 4
                 }
                 useXNNPACK = useXNNPack
-                useNNAPI = true
+                this.useNNAPI = useNNAPI
             }
         firstModelInterpreter =
             Interpreter(FileUtil.loadMappedFile(context, "spoof_model_scale_2_7.tflite"), interpreterOptions)
