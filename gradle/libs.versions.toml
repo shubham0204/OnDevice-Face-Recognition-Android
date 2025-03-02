@@ -13,8 +13,8 @@ objectboxGradlePlugin = "4.0.0"
 documentfile = "1.0.1"
 exifinterface = "1.3.7"
 tasksVision = "0.10.14"
-tensorflow-lite = "2.14.0"
-tensorflow-lite-support = "0.4.3"
+tensorflow-lite = "1.1.2"
+tensorflow-lite-support = "1.1.2"
 camerax = "1.3.3"
 uiTextGoogleFonts = "1.6.7"
 
@@ -47,10 +47,10 @@ koin-ksp-compiler = { module = "io.insert-koin:koin-ksp-compiler", version.ref =
 
 # TensorFlow Lite
 tasks-vision = { module = "com.google.mediapipe:tasks-vision", version.ref = "tasksVision" }
-tensorflow-lite = { module = "org.tensorflow:tensorflow-lite", version.ref = "tensorflow-lite" }
-tensorflow-lite-gpu = { module = "org.tensorflow:tensorflow-lite-gpu", version.ref = "tensorflow-lite" }
-tensorflow-lite-gpu-api = { module = "org.tensorflow:tensorflow-lite-gpu-api", version.ref = "tensorflow-lite" }
-tensorflow-lite-support = { module = "org.tensorflow:tensorflow-lite-support", version.ref = "tensorflow-lite-support" }
+tensorflow-lite = { module = "com.google.ai.edge.litert:litert", version.ref = "tensorflow-lite" }
+tensorflow-lite-gpu = { module = "com.google.ai.edge.litert:litert-gpu", version.ref = "tensorflow-lite" }
+tensorflow-lite-gpu-api = { module = "com.google.ai.edge.litert:litert-gpu-api", version.ref = "tensorflow-lite" }
+tensorflow-lite-support = { module = "com.google.ai.edge.litert:litert-support", version.ref = "tensorflow-lite-support" }
 
 # DocumentFile and ExifInterface
 androidx-documentfile = { module = "androidx.documentfile:documentfile", version.ref = "documentfile" }
