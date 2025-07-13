@@ -4,7 +4,6 @@ import org.koin.core.annotation.Single
 
 @Single
 class ImagesVectorDB {
-
     private val imagesBox = ObjectBoxStore.store.boxFor(FaceImageRecord::class.java)
 
     fun addFaceImageRecord(record: FaceImageRecord) {
@@ -29,7 +28,11 @@ class ImagesVectorDB {
 
     fun removeFaceRecordsWithPersonID(personID: Long) {
         imagesBox.removeByIds(
-            imagesBox.query(FaceImageRecord_.personID.equal(personID)).build().findIds().toList()
+            imagesBox
+                .query(FaceImageRecord_.personID.equal(personID))
+                .build()
+                .findIds()
+                .toList(),
         )
     }
 }

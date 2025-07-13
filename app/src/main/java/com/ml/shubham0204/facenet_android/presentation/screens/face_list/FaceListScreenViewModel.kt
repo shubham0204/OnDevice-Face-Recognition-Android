@@ -8,9 +8,8 @@ import org.koin.android.annotation.KoinViewModel
 @KoinViewModel
 class FaceListScreenViewModel(
     val imageVectorUseCase: ImageVectorUseCase,
-    val personUseCase: PersonUseCase
+    val personUseCase: PersonUseCase,
 ) : ViewModel() {
-
     val personFlow = personUseCase.getAll()
 
     // Remove the person from `PersonRecord`

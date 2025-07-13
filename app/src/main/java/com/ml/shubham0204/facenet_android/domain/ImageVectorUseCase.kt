@@ -9,28 +9,31 @@ import com.ml.shubham0204.facenet_android.data.RecognitionMetrics
 import com.ml.shubham0204.facenet_android.domain.embeddings.FaceNet
 import com.ml.shubham0204.facenet_android.domain.face_detection.FaceSpoofDetector
 import com.ml.shubham0204.facenet_android.domain.face_detection.MediapipeFaceDetector
+import org.koin.core.annotation.Single
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.time.DurationUnit
 import kotlin.time.measureTimedValue
-import org.koin.core.annotation.Single
 
 @Single
 class ImageVectorUseCase(
     private val mediapipeFaceDetector: MediapipeFaceDetector,
     private val faceSpoofDetector: FaceSpoofDetector,
     private val imagesVectorDB: ImagesVectorDB,
-    private val faceNet: FaceNet
+    private val faceNet: FaceNet,
 ) {
-
     data class FaceRecognitionResult(
         val personName: String,
         val boundingBox: Rect,
-        val spoofResult: FaceSpoofDetector.FaceSpoofResult? = null
+        val spoofResult: FaceSpoofDetector.FaceSpoofResult? = null,
     )
 
     // Add the person's image to the database
-    suspend fun addImage(personID: Long, personName: String, imageUri: Uri): Result<Boolean> {
+    suspend fun addImage(
+        personID: Long,
+        personName: String,
+        imageUri: Uri,
+    ): Result<Boolean> {
         // Perform face-detection and get the cropped face as a Bitmap
         val faceDetectionResult = mediapipeFaceDetector.getCroppedFace(imageUri)
         if (faceDetectionResult.isSuccess) {
@@ -41,8 +44,8 @@ class ImageVectorUseCase(
                 FaceImageRecord(
                     personID = personID,
                     personName = personName,
-                    faceEmbedding = embedding
-                )
+                    faceEmbedding = embedding,
+                ),
             )
             return Result.success(true)
         } else {
@@ -52,9 +55,7 @@ class ImageVectorUseCase(
 
     // From the given frame, return the name of the person by performing
     // face recognition
-    suspend fun getNearestPersonName(
-        frameBitmap: Bitmap
-    ): Pair<RecognitionMetrics?, List<FaceRecognitionResult>> {
+    suspend fun getNearestPersonName(frameBitmap: Bitmap): Pair<RecognitionMetrics?, List<FaceRecognitionResult>> {
         // Perform face-detection and get the cropped face as a Bitmap
         val (faceDetectionResult, t1) =
             measureTimedValue { mediapipeFaceDetector.getAllCroppedFaces(frameBitmap) }
@@ -87,11 +88,11 @@ class ImageVectorUseCase(
             // else we conclude that the face does not match enough
             if (distance > 0.4) {
                 faceRecognitionResults.add(
-                    FaceRecognitionResult(recognitionResult.personName, boundingBox, spoofResult)
+                    FaceRecognitionResult(recognitionResult.personName, boundingBox, spoofResult),
                 )
             } else {
                 faceRecognitionResults.add(
-                    FaceRecognitionResult("Not recognized", boundingBox, spoofResult)
+                    FaceRecognitionResult("Not recognized", boundingBox, spoofResult),
                 )
             }
         }
@@ -101,7 +102,7 @@ class ImageVectorUseCase(
                     timeFaceDetection = t1.toLong(DurationUnit.MILLISECONDS),
                     timeFaceEmbedding = avgT2 / faceDetectionResult.size,
                     timeVectorSearch = avgT3 / faceDetectionResult.size,
-                    timeFaceSpoofDetection = avgT4 / faceDetectionResult.size
+                    timeFaceSpoofDetection = avgT4 / faceDetectionResult.size,
                 )
             } else {
                 null
@@ -110,7 +111,10 @@ class ImageVectorUseCase(
         return Pair(metrics, faceRecognitionResults)
     }
 
-    private fun cosineDistance(x1: FloatArray, x2: FloatArray): Float {
+    private fun cosineDistance(
+        x1: FloatArray,
+        x2: FloatArray,
+    ): Float {
         var mag1 = 0.0f
         var mag2 = 0.0f
         var product = 0.0f

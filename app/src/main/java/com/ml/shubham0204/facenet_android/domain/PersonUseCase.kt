@@ -6,17 +6,20 @@ import kotlinx.coroutines.flow.Flow
 import org.koin.core.annotation.Single
 
 @Single
-class PersonUseCase(private val personDB: PersonDB) {
-
-    fun addPerson(name: String, numImages: Long): Long {
-        return personDB.addPerson(
+class PersonUseCase(
+    private val personDB: PersonDB,
+) {
+    fun addPerson(
+        name: String,
+        numImages: Long,
+    ): Long =
+        personDB.addPerson(
             PersonRecord(
                 personName = name,
                 numImages = numImages,
-                addTime = System.currentTimeMillis()
-            )
+                addTime = System.currentTimeMillis(),
+            ),
         )
-    }
 
     fun removePerson(id: Long) {
         personDB.removePerson(id)

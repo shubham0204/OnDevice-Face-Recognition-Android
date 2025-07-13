@@ -34,9 +34,17 @@ https://github.com/serengil/deepface/blob/master/deepface/models/spoofing/FasNet
 
 */
 @Single
-class FaceSpoofDetector(context: Context, useGpu: Boolean = false, useXNNPack: Boolean = false, useNNAPI: Boolean = false) {
-
-    data class FaceSpoofResult(val isSpoof: Boolean, val score: Float, val timeMillis: Long)
+class FaceSpoofDetector(
+    context: Context,
+    useGpu: Boolean = false,
+    useXNNPack: Boolean = false,
+    useNNAPI: Boolean = false,
+) {
+    data class FaceSpoofResult(
+        val isSpoof: Boolean,
+        val score: Float,
+        val timeMillis: Long,
+    )
 
     private val scale1 = 2.7f
     private val scale2 = 4.0f
@@ -45,9 +53,11 @@ class FaceSpoofDetector(context: Context, useGpu: Boolean = false, useXNNPack: B
 
     private var firstModelInterpreter: Interpreter
     private var secondModelInterpreter: Interpreter
-    private val imageTensorProcessor = ImageProcessor.Builder()
-        .add(CastOp(DataType.FLOAT32))
-        .build()
+    private val imageTensorProcessor =
+        ImageProcessor
+            .Builder()
+            .add(CastOp(DataType.FLOAT32))
+            .build()
 
     init {
         // Initialize TFLiteInterpreter
@@ -67,12 +77,21 @@ class FaceSpoofDetector(context: Context, useGpu: Boolean = false, useXNNPack: B
                 this.useNNAPI = useNNAPI
             }
         firstModelInterpreter =
-            Interpreter(FileUtil.loadMappedFile(context, "spoof_model_scale_2_7.tflite"), interpreterOptions)
+            Interpreter(
+                FileUtil.loadMappedFile(context, "spoof_model_scale_2_7.tflite"),
+                interpreterOptions,
+            )
         secondModelInterpreter =
-            Interpreter(FileUtil.loadMappedFile(context, "spoof_model_scale_4_0.tflite"), interpreterOptions)
+            Interpreter(
+                FileUtil.loadMappedFile(context, "spoof_model_scale_4_0.tflite"),
+                interpreterOptions,
+            )
     }
 
-    suspend fun detectSpoof(frameImage: Bitmap, faceRect: Rect): FaceSpoofResult =
+    suspend fun detectSpoof(
+        frameImage: Bitmap,
+        faceRect: Rect,
+    ): FaceSpoofResult =
         withContext(Dispatchers.Default) {
             // Crop the images and scale the bounding boxes
             // with the given two constants
@@ -83,15 +102,16 @@ class FaceSpoofDetector(context: Context, useGpu: Boolean = false, useXNNPack: B
                     bbox = faceRect,
                     bboxScale = scale1,
                     targetWidth = inputImageDim,
-                    targetHeight = inputImageDim
+                    targetHeight = inputImageDim,
                 )
             for (i in 0 until croppedImage1.width) {
                 for (j in 0 until croppedImage1.height) {
-                    croppedImage1[i, j] = Color.rgb(
-                        Color.blue(croppedImage1[i, j]),
-                        Color.green(croppedImage1[i, j]),
-                        Color.red(croppedImage1[i, j])
-                    )
+                    croppedImage1[i, j] =
+                        Color.rgb(
+                            Color.blue(croppedImage1[i, j]),
+                            Color.green(croppedImage1[i, j]),
+                            Color.red(croppedImage1[i, j]),
+                        )
                 }
             }
             val croppedImage2 =
@@ -100,15 +120,16 @@ class FaceSpoofDetector(context: Context, useGpu: Boolean = false, useXNNPack: B
                     bbox = faceRect,
                     bboxScale = scale2,
                     targetWidth = inputImageDim,
-                    targetHeight = inputImageDim
+                    targetHeight = inputImageDim,
                 )
             for (i in 0 until croppedImage2.width) {
                 for (j in 0 until croppedImage2.height) {
-                    croppedImage2[i, j] = Color.rgb(
-                        Color.blue(croppedImage2[i, j]),
-                        Color.green(croppedImage2[i, j]),
-                        Color.red(croppedImage2[i, j])
-                    )
+                    croppedImage2[i, j] =
+                        Color.rgb(
+                            Color.blue(croppedImage2[i, j]),
+                            Color.green(croppedImage2[i, j]),
+                            Color.red(croppedImage2[i, j]),
+                        )
                 }
             }
             val input1 = imageTensorProcessor.process(TensorImage.fromBitmap(croppedImage1)).buffer
@@ -116,14 +137,16 @@ class FaceSpoofDetector(context: Context, useGpu: Boolean = false, useXNNPack: B
             val output1 = arrayOf(FloatArray(outputDim))
             val output2 = arrayOf(FloatArray(outputDim))
 
-            val time = measureTime {
-                firstModelInterpreter.run(input1, output1)
-                secondModelInterpreter.run(input2, output2)
-            }.toLong(DurationUnit.MILLISECONDS)
+            val time =
+                measureTime {
+                    firstModelInterpreter.run(input1, output1)
+                    secondModelInterpreter.run(input2, output2)
+                }.toLong(DurationUnit.MILLISECONDS)
 
-            val output = softMax(output1[0]).zip(softMax(output2[0])).map {
-                (it.first + it.second)
-            }
+            val output =
+                softMax(output1[0]).zip(softMax(output2[0])).map {
+                    (it.first + it.second)
+                }
             val label = output.indexOf(output.max())
             val iSpoof = label != 1
             val score = output[label] / 2f
@@ -142,7 +165,7 @@ class FaceSpoofDetector(context: Context, useGpu: Boolean = false, useXNNPack: B
         bbox: Rect,
         bboxScale: Float,
         targetWidth: Int,
-        targetHeight: Int
+        targetHeight: Int,
     ): Bitmap {
         val srcWidth = origImage.width
         val srcHeight = origImage.height
@@ -153,12 +176,17 @@ class FaceSpoofDetector(context: Context, useGpu: Boolean = false, useXNNPack: B
                 scaledBox.left,
                 scaledBox.top,
                 scaledBox.width(),
-                scaledBox.height()
+                scaledBox.height(),
             )
         return Bitmap.createScaledBitmap(croppedBitmap, targetWidth, targetHeight, true)
     }
 
-    private fun getScaledBox(srcWidth: Int, srcHeight: Int, box: Rect, bboxScale: Float): Rect {
+    private fun getScaledBox(
+        srcWidth: Int,
+        srcHeight: Int,
+        box: Rect,
+        bboxScale: Float,
+    ): Rect {
         val x = box.left
         val y = box.top
         val w = box.width()

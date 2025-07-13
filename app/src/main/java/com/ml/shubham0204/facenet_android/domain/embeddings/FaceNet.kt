@@ -2,10 +2,6 @@ package com.ml.shubham0204.facenet_android.domain.embeddings
 
 import android.content.Context
 import android.graphics.Bitmap
-import java.nio.ByteBuffer
-import kotlin.math.max
-import kotlin.math.pow
-import kotlin.math.sqrt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
@@ -20,13 +16,20 @@ import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.image.ops.ResizeOp
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import org.tensorflow.lite.support.tensorbuffer.TensorBufferFloat
+import java.nio.ByteBuffer
+import kotlin.math.max
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 // Derived from the original project:
 // https://github.com/shubham0204/FaceRecognition_With_FaceNet_Android/blob/master/app/src/main/java/com/ml/quaterion/facenetdetection/model/FaceNetModel.kt
 // Utility class for FaceNet model
 @Single
-class FaceNet(context: Context, useGpu: Boolean = true, useXNNPack: Boolean = true) {
-
+class FaceNet(
+    context: Context,
+    useGpu: Boolean = true,
+    useXNNPack: Boolean = true,
+) {
     // Input image size for FaceNet model.
     private val imgSize = 160
 
@@ -35,7 +38,8 @@ class FaceNet(context: Context, useGpu: Boolean = true, useXNNPack: Boolean = tr
 
     private var interpreter: Interpreter
     private val imageTensorProcessor =
-        ImageProcessor.Builder()
+        ImageProcessor
+            .Builder()
             .add(ResizeOp(imgSize, imgSize, ResizeOp.ResizeMethod.BILINEAR))
             .add(StandardizeOp())
             .build()
@@ -75,14 +79,11 @@ class FaceNet(context: Context, useGpu: Boolean = true, useXNNPack: Boolean = tr
     }
 
     // Resize the given bitmap and convert it to a ByteBuffer
-    private fun convertBitmapToBuffer(image: Bitmap): ByteBuffer {
-        return imageTensorProcessor.process(TensorImage.fromBitmap(image)).buffer
-    }
+    private fun convertBitmapToBuffer(image: Bitmap): ByteBuffer = imageTensorProcessor.process(TensorImage.fromBitmap(image)).buffer
 
     // Op to perform standardization
     // x' = ( x - mean ) / std_dev
     class StandardizeOp : TensorOperator {
-
         override fun apply(p0: TensorBuffer?): TensorBuffer {
             val pixels = p0!!.floatArray
             val mean = pixels.average().toFloat()

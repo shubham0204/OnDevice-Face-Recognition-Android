@@ -7,11 +7,14 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 
 @Composable
-fun DelayedVisibility(visible: Boolean, content: @Composable (() -> Unit)) {
+fun DelayedVisibility(
+    visible: Boolean,
+    content: @Composable (() -> Unit),
+) {
     AnimatedVisibility(
         visible = visible,
         enter = fadeIn(animationSpec = tween(1000)),
-        exit = fadeOut(animationSpec = tween(1000))
+        exit = fadeOut(animationSpec = tween(1000)),
     ) {
         content()
     }

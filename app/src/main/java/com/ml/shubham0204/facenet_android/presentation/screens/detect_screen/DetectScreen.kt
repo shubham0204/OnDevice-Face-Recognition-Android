@@ -7,7 +7,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
 import androidx.camera.core.CameraSelector
-
 import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -69,14 +68,14 @@ fun DetectScreen(onOpenFaceListClick: (() -> Unit)) {
                     title = {
                         Text(
                             text = stringResource(id = R.string.app_name),
-                            style = MaterialTheme.typography.headlineSmall
+                            style = MaterialTheme.typography.headlineSmall,
                         )
                     },
                     actions = {
                         IconButton(onClick = onOpenFaceListClick) {
                             Icon(
                                 imageVector = Icons.Default.Face,
-                                contentDescription = "Open Face List"
+                                contentDescription = "Open Face List",
                             )
                         }
                         IconButton(
@@ -86,16 +85,16 @@ fun DetectScreen(onOpenFaceListClick: (() -> Unit)) {
                                 } else {
                                     cameraFacing.intValue = CameraSelector.LENS_FACING_BACK
                                 }
-                            }
+                            },
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Cameraswitch,
-                                contentDescription = "Switch Camera"
+                                contentDescription = "Switch Camera",
                             )
                         }
-                    }
+                    },
                 )
-            }
+            },
         ) { innerPadding ->
             Column(modifier = Modifier.padding(innerPadding)) { ScreenUI() }
         }
@@ -108,26 +107,28 @@ private fun ScreenUI() {
     Box {
         Camera(viewModel)
         DelayedVisibility(viewModel.getNumPeople() > 0) {
-            val metrics by remember{ viewModel.faceDetectionMetricsState }
+            val metrics by remember { viewModel.faceDetectionMetricsState }
             Column {
                 Text(
                     text = "Recognition on ${viewModel.getNumPeople()} face(s)",
                     color = Color.White,
                     modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 metrics?.let {
                     Text(
-                        text = "face detection: ${it.timeFaceDetection} ms" +
+                        text =
+                            "face detection: ${it.timeFaceDetection} ms" +
                                 "\nface embedding: ${it.timeFaceEmbedding} ms" +
                                 "\nvector search: ${it.timeVectorSearch} ms\n" +
                                 "spoof detection: ${it.timeFaceSpoofDetection} ms",
                         color = Color.White,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 24.dp),
-                        textAlign = TextAlign.Center
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 24.dp),
+                        textAlign = TextAlign.Center,
                     )
                 }
             }
@@ -137,12 +138,12 @@ private fun ScreenUI() {
                 text = "No images in database",
                 color = Color.White,
                 modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .background(Color.Blue, RoundedCornerShape(16.dp))
-                    .padding(8.dp),
-                textAlign = TextAlign.Center
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .background(Color.Blue, RoundedCornerShape(16.dp))
+                        .padding(8.dp),
+                textAlign = TextAlign.Center,
             )
         }
         AppAlertDialog()
@@ -155,7 +156,7 @@ private fun Camera(viewModel: DetectScreenViewModel) {
     val context = LocalContext.current
     cameraPermissionStatus.value =
         ActivityCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
-            PackageManager.PERMISSION_GRANTED
+        PackageManager.PERMISSION_GRANTED
     val cameraFacing by remember { cameraFacing }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -172,22 +173,22 @@ private fun Camera(viewModel: DetectScreenViewModel) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { FaceDetectionOverlay(lifecycleOwner, context, viewModel) },
-            update = { it.initializeCamera(cameraFacing) }
+            update = { it.initializeCamera(cameraFacing) },
         )
     }
     DelayedVisibility(!cameraPermissionStatus.value) {
         Column(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
                 "Allow Camera Permissions\nThe app cannot work without the camera permission.",
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
             Button(
                 onClick = { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) },
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+                modifier = Modifier.align(Alignment.CenterHorizontally),
             ) {
                 Text(text = "Allow")
             }
@@ -205,6 +206,6 @@ private fun camaraPermissionDialog() {
         onNegativeButtonClick = {
             // TODO: Handle deny camera permission action
             //       close the app
-        }
+        },
     )
 }

@@ -23,20 +23,19 @@ import androidx.core.graphics.toRectF
 import androidx.core.view.doOnLayout
 import androidx.lifecycle.LifecycleOwner
 import com.ml.shubham0204.facenet_android.presentation.screens.detect_screen.DetectScreenViewModel
-import java.util.concurrent.Executors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.concurrent.Executors
 
 @SuppressLint("ViewConstructor")
 @ExperimentalGetImage
 class FaceDetectionOverlay(
     private val lifecycleOwner: LifecycleOwner,
     private val context: Context,
-    private val viewModel: DetectScreenViewModel
+    private val viewModel: DetectScreenViewModel,
 ) : FrameLayout(context) {
-
     private var overlayWidth: Int = 0
     private var overlayHeight: Int = 0
 
@@ -78,7 +77,8 @@ class FaceDetectionOverlay(
                 val cameraSelector =
                     CameraSelector.Builder().requireLensFacing(cameraFacing).build()
                 val frameAnalyzer =
-                    ImageAnalysis.Builder()
+                    ImageAnalysis
+                        .Builder()
                         .setTargetAspectRatio(AspectRatio.RATIO_16_9)
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
@@ -89,10 +89,10 @@ class FaceDetectionOverlay(
                     lifecycleOwner,
                     cameraSelector,
                     preview,
-                    frameAnalyzer
+                    frameAnalyzer,
                 )
             },
-            executor
+            executor,
         )
         if (childCount == 2) {
             removeView(this.previewView)
@@ -122,7 +122,7 @@ class FaceDetectionOverlay(
                 Bitmap.createBitmap(
                     image.image!!.width,
                     image.image!!.height,
-                    Bitmap.Config.ARGB_8888
+                    Bitmap.Config.ARGB_8888,
                 )
             frameBitmap.copyPixelsFromBuffer(image.planes[0].buffer)
 
@@ -141,7 +141,7 @@ class FaceDetectionOverlay(
                     frameBitmap.width,
                     frameBitmap.height,
                     imageTransform,
-                    false
+                    false,
                 )
 
             if (!isBoundingBoxTransformedInitialized) {
@@ -149,7 +149,7 @@ class FaceDetectionOverlay(
                 boundingBoxTransform.apply {
                     setScale(
                         overlayWidth / frameBitmap.width.toFloat(),
-                        overlayHeight / frameBitmap.height.toFloat()
+                        overlayHeight / frameBitmap.height.toFloat(),
                     )
                     if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
                         // Mirror the bounding box coordinates
@@ -158,7 +158,7 @@ class FaceDetectionOverlay(
                             -1f,
                             1f,
                             overlayWidth.toFloat() / 2.0f,
-                            overlayHeight.toFloat() / 2.0f
+                            overlayHeight.toFloat() / 2.0f,
                         )
                     }
                 }
@@ -166,9 +166,11 @@ class FaceDetectionOverlay(
             }
             CoroutineScope(Dispatchers.Default).launch {
                 val predictions = ArrayList<Prediction>()
-                val (metrics, results) = viewModel.imageVectorUseCase.getNearestPersonName(frameBitmap)
-                results.forEach {
-                    (name, boundingBox, spoofResult) ->
+                val (metrics, results) =
+                    viewModel.imageVectorUseCase.getNearestPersonName(
+                        frameBitmap,
+                    )
+                results.forEach { (name, boundingBox, spoofResult) ->
                     val box = boundingBox.toRectF()
                     var personName = name
                     if (viewModel.getNumPeople().toInt() == 0) {
@@ -190,11 +192,15 @@ class FaceDetectionOverlay(
             image.close()
         }
 
-    data class Prediction(var bbox: RectF, var label: String)
+    data class Prediction(
+        var bbox: RectF,
+        var label: String,
+    )
 
-    inner class BoundingBoxOverlay(context: Context) :
-        SurfaceView(context), SurfaceHolder.Callback {
-
+    inner class BoundingBoxOverlay(
+        context: Context,
+    ) : SurfaceView(context),
+        SurfaceHolder.Callback {
         private val boxPaint =
             Paint().apply {
                 color = Color.parseColor("#4D90caf9")
@@ -209,7 +215,12 @@ class FaceDetectionOverlay(
 
         override fun surfaceCreated(holder: SurfaceHolder) {}
 
-        override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
+        override fun surfaceChanged(
+            holder: SurfaceHolder,
+            format: Int,
+            width: Int,
+            height: Int,
+        ) {}
 
         override fun surfaceDestroyed(holder: SurfaceHolder) {}
 

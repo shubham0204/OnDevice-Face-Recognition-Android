@@ -14,22 +14,24 @@ import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.facedetector.FaceDetector
 import com.ml.shubham0204.facenet_android.domain.AppException
 import com.ml.shubham0204.facenet_android.domain.ErrorCode
-import java.io.File
-import java.io.FileOutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
+import java.io.File
+import java.io.FileOutputStream
 
 // Utility class for interacting with Mediapipe's Face Detector
 // See https://ai.google.dev/edge/mediapipe/solutions/vision/face_detector/android
 @Single
-class MediapipeFaceDetector(private val context: Context) {
-
+class MediapipeFaceDetector(
+    private val context: Context,
+) {
     // The model is stored in the assets folder
     private val modelName = "blaze_face_short_range.tflite"
     private val baseOptions = BaseOptions.builder().setModelAssetPath(modelName).build()
     private val faceDetectorOptions =
-        FaceDetector.FaceDetectorOptions.builder()
+        FaceDetector.FaceDetectorOptions
+            .builder()
             .setBaseOptions(baseOptions)
             .setRunningMode(RunningMode.IMAGE)
             .build()
@@ -40,7 +42,7 @@ class MediapipeFaceDetector(private val context: Context) {
             var imageInputStream =
                 context.contentResolver.openInputStream(imageUri)
                     ?: return@withContext Result.failure<Bitmap>(
-                        AppException(ErrorCode.FACE_DETECTOR_FAILURE)
+                        AppException(ErrorCode.FACE_DETECTOR_FAILURE),
                     )
             var imageBitmap = BitmapFactory.decodeStream(imageInputStream)
             imageInputStream.close()
@@ -52,14 +54,14 @@ class MediapipeFaceDetector(private val context: Context) {
             imageInputStream =
                 context.contentResolver.openInputStream(imageUri)
                     ?: return@withContext Result.failure<Bitmap>(
-                        AppException(ErrorCode.FACE_DETECTOR_FAILURE)
+                        AppException(ErrorCode.FACE_DETECTOR_FAILURE),
                     )
             val exifInterface = ExifInterface(imageInputStream)
             imageBitmap =
                 when (
                     exifInterface.getAttributeInt(
                         ExifInterface.TAG_ORIENTATION,
-                        ExifInterface.ORIENTATION_UNDEFINED
+                        ExifInterface.ORIENTATION_UNDEFINED,
                     )
                 ) {
                     ExifInterface.ORIENTATION_ROTATE_90 -> rotateBitmap(imageBitmap, 90f)
@@ -87,12 +89,12 @@ class MediapipeFaceDetector(private val context: Context) {
                             rect.left,
                             rect.top,
                             rect.width(),
-                            rect.height()
+                            rect.height(),
                         )
                     return@withContext Result.success(croppedBitmap)
                 } else {
                     return@withContext Result.failure<Bitmap>(
-                        AppException(ErrorCode.FACE_DETECTOR_FAILURE)
+                        AppException(ErrorCode.FACE_DETECTOR_FAILURE),
                     )
                 }
             }
@@ -115,19 +117,26 @@ class MediapipeFaceDetector(private val context: Context) {
                             rect.left,
                             rect.top,
                             rect.width(),
-                            rect.height()
+                            rect.height(),
                         )
                     Pair(croppedBitmap, rect)
                 }
         }
 
     // DEBUG: For testing purpose, saves the Bitmap to the app's private storage
-    fun saveBitmap(context: Context, image: Bitmap, name: String) {
+    fun saveBitmap(
+        context: Context,
+        image: Bitmap,
+        name: String,
+    ) {
         val fileOutputStream = FileOutputStream(File(context.filesDir.absolutePath + "/$name.png"))
         image.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream)
     }
 
-    private fun rotateBitmap(source: Bitmap, degrees: Float): Bitmap {
+    private fun rotateBitmap(
+        source: Bitmap,
+        degrees: Float,
+    ): Bitmap {
         val matrix = Matrix()
         matrix.postRotate(degrees)
         return Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, false)
@@ -135,10 +144,12 @@ class MediapipeFaceDetector(private val context: Context) {
 
     // Check if the bounds of `boundingBox` fit within the
     // limits of `cameraFrameBitmap`
-    private fun validateRect(cameraFrameBitmap: Bitmap, boundingBox: Rect): Boolean {
-        return boundingBox.left >= 0 &&
+    private fun validateRect(
+        cameraFrameBitmap: Bitmap,
+        boundingBox: Rect,
+    ): Boolean =
+        boundingBox.left >= 0 &&
             boundingBox.top >= 0 &&
             (boundingBox.left + boundingBox.width()) < cameraFrameBitmap.width &&
             (boundingBox.top + boundingBox.height()) < cameraFrameBitmap.height
-    }
 }

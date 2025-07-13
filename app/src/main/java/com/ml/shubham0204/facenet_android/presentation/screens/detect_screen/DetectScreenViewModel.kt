@@ -10,9 +10,8 @@ import org.koin.android.annotation.KoinViewModel
 @KoinViewModel
 class DetectScreenViewModel(
     val personUseCase: PersonUseCase,
-    val imageVectorUseCase: ImageVectorUseCase
+    val imageVectorUseCase: ImageVectorUseCase,
 ) : ViewModel() {
-
     val faceDetectionMetricsState = mutableStateOf<RecognitionMetrics?>(null)
 
     fun getNumPeople(): Long = personUseCase.getCount()

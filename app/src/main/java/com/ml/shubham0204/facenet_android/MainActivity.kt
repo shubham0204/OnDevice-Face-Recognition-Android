@@ -14,7 +14,6 @@ import com.ml.shubham0204.facenet_android.presentation.screens.detect_screen.Det
 import com.ml.shubham0204.facenet_android.presentation.screens.face_list.FaceListScreen
 
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -24,14 +23,14 @@ class MainActivity : ComponentActivity() {
                 navController = navHostController,
                 startDestination = "detect",
                 enterTransition = { fadeIn() },
-                exitTransition = { fadeOut() }
+                exitTransition = { fadeOut() },
             ) {
                 composable("add-face") { AddFaceScreen { navHostController.navigateUp() } }
                 composable("detect") { DetectScreen { navHostController.navigate("face-list") } }
                 composable("face-list") {
                     FaceListScreen(
                         onNavigateBack = { navHostController.navigateUp() },
-                        onAddFaceClick = { navHostController.navigate("add-face") }
+                        onAddFaceClick = { navHostController.navigate("add-face") },
                     )
                 }
             }

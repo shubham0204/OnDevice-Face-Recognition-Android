@@ -41,7 +41,10 @@ import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FaceListScreen(onNavigateBack: (() -> Unit), onAddFaceClick: (() -> Unit)) {
+fun FaceListScreen(
+    onNavigateBack: (() -> Unit),
+    onAddFaceClick: (() -> Unit),
+) {
     FaceNetAndroidTheme {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -54,7 +57,7 @@ fun FaceListScreen(onNavigateBack: (() -> Unit), onAddFaceClick: (() -> Unit)) {
                         IconButton(onClick = onNavigateBack) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                                contentDescription = "Navigate Back"
+                                contentDescription = "Navigate Back",
                             )
                         }
                     },
@@ -64,7 +67,7 @@ fun FaceListScreen(onNavigateBack: (() -> Unit), onAddFaceClick: (() -> Unit)) {
                 FloatingActionButton(onClick = onAddFaceClick) {
                     Icon(imageVector = Icons.Default.Add, contentDescription = "Add a new face")
                 }
-            }
+            },
         ) { innerPadding ->
             val viewModel: FaceListScreenViewModel = koinViewModel()
             Column(modifier = Modifier.padding(innerPadding)) {
@@ -82,22 +85,25 @@ private fun ScreenUI(viewModel: FaceListScreenViewModel) {
 }
 
 @Composable
-private fun FaceListItem(personRecord: PersonRecord, onRemoveFaceClick: (() -> Unit)) {
+private fun FaceListItem(
+    personRecord: PersonRecord,
+    onRemoveFaceClick: (() -> Unit),
+) {
     Row(
         modifier = Modifier.fillMaxWidth().background(Color.White).padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.fillMaxWidth().weight(1f)) {
             Text(
                 text = personRecord.personName,
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = DateUtils.getRelativeTimeSpanString(personRecord.addTime).toString(),
                 style = MaterialTheme.typography.labelSmall,
-                color = Color.DarkGray
+                color = Color.DarkGray,
             )
         }
         Icon(
@@ -111,11 +117,11 @@ private fun FaceListItem(personRecord: PersonRecord, onRemoveFaceClick: (() -> U
                         dialogPositiveButtonText = "Remove",
                         onPositiveButtonClick = onRemoveFaceClick,
                         dialogNegativeButtonText = "Cancel",
-                        onNegativeButtonClick = {}
+                        onNegativeButtonClick = {},
                     )
                 },
             imageVector = Icons.Default.Clear,
-            contentDescription = "Remove face"
+            contentDescription = "Remove face",
         )
         Spacer(modifier = Modifier.width(2.dp))
     }

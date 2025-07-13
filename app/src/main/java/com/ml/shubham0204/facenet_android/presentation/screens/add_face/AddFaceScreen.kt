@@ -57,12 +57,12 @@ fun AddFaceScreen(onNavigateBack: (() -> Unit)) {
                         IconButton(onClick = onNavigateBack) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                                contentDescription = "Navigate Back"
+                                contentDescription = "Navigate Back",
                             )
                         }
-                    }
+                    },
                 )
-            }
+            },
         ) { innerPadding ->
             Column(modifier = Modifier.padding(innerPadding)) {
                 val viewModel: AddFaceScreenViewModel = koinViewModel()
@@ -77,18 +77,23 @@ fun AddFaceScreen(onNavigateBack: (() -> Unit)) {
 private fun ScreenUI(viewModel: AddFaceScreenViewModel) {
     val pickVisualMediaLauncher =
         rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.PickMultipleVisualMedia()
+            contract = ActivityResultContracts.PickMultipleVisualMedia(),
         ) {
             viewModel.selectedImageURIs.value = it
         }
     var personName by remember { viewModel.personNameState }
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
+    Column(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+    ) {
         TextField(
             modifier = Modifier.fillMaxWidth(),
             value = personName,
             onValueChange = { personName = it },
             label = { Text(text = "Enter the person's name") },
-            singleLine = true
+            singleLine = true,
         )
         Spacer(modifier = Modifier.height(16.dp))
         Row(
@@ -99,9 +104,9 @@ private fun ScreenUI(viewModel: AddFaceScreenViewModel) {
                 enabled = viewModel.personNameState.value.isNotEmpty(),
                 onClick = {
                     pickVisualMediaLauncher.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
                     )
-                }
+                },
             ) {
                 Icon(imageVector = Icons.Default.Photo, contentDescription = "Choose photos")
                 Text(text = "Choose photos")
@@ -113,7 +118,7 @@ private fun ScreenUI(viewModel: AddFaceScreenViewModel) {
         DelayedVisibility(viewModel.selectedImageURIs.value.isNotEmpty()) {
             Text(
                 text = "${viewModel.selectedImageURIs.value.size} image(s) selected",
-                style = MaterialTheme.typography.labelSmall
+                style = MaterialTheme.typography.labelSmall,
             )
         }
         ImagesGrid(viewModel)
@@ -129,7 +134,10 @@ private fun ImagesGrid(viewModel: AddFaceScreenViewModel) {
 }
 
 @Composable
-private fun ImageReadProgressDialog(viewModel: AddFaceScreenViewModel, onNavigateBack: () -> Unit) {
+private fun ImageReadProgressDialog(
+    viewModel: AddFaceScreenViewModel,
+    onNavigateBack: () -> Unit,
+) {
     val isProcessing by remember { viewModel.isProcessingImages }
     val numImagesProcessed by remember { viewModel.numImagesProcessed }
     val context = LocalContext.current
