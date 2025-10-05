@@ -75,6 +75,37 @@ data class FaceImageRecord(
 )
 ```
 
+### Enable Flat Index Search (Precise NN Search)
+
+The nearest-neighbor technique used by ObjectBox (vector-store used in the app) is an ANN (Approximate Nearest Neighbor) technique. ANNs techniques do not always return the nearest neighbors to a given vector, but are generally faster than precise NN search techniques.
+
+In the app, a threshold is applied to the distance of the nearest neighbor to determine if the neighbor belongs to the set of recognizable faces i.e. if the search result should be `NOT RECOGNIZED`. As discussed in issue #25, the performance of face recognition is affected if the nearest neighbor search is approximate, especially over a larger dataset.
+
+To disable ObjectBox's HNSW ANN search, set `flatSearch` to `true` in `FaceDetectionOverlay.kt`,
+
+```kotlin
+@SuppressLint("ViewConstructor")
+@ExperimentalGetImage
+class FaceDetectionOverlay(
+    private val lifecycleOwner: LifecycleOwner,
+    private val context: Context,
+    private val viewModel: DetectScreenViewModel,
+) : FrameLayout(context) {
+    
+    // Setting `flatSearch` to `true` enables precise calculation
+    // of cosine similarity.
+    // This is slower than ObjectBox's vector search, which approximates
+    // nearest neighbor search
+    private val flatSearch: Boolean = false
+    
+    private var overlayWidth: Int = 0
+    private var overlayHeight: Int = 0
+    // ...
+}
+```
+
+This triggers a linear-search across all records in the database, which is slower but returns the 'precise' nearest neighbor. The time taken by the linear-search to scan all records is reduced by parallelizing the search over 4 coroutines.
+
 ## Working
 
 ![working](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/assets/41076823/def3d020-e36a-44c6-b964-866786c36e3d)

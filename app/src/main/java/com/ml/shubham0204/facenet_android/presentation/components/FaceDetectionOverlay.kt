@@ -36,6 +36,11 @@ class FaceDetectionOverlay(
     private val context: Context,
     private val viewModel: DetectScreenViewModel,
 ) : FrameLayout(context) {
+    // Setting `flatSearch` to `true` enables precise calculation
+    // of cosine similarity.
+    // This is slower than ObjectBox's vector search, which approximates
+    // nearest neighbor search
+    private val flatSearch: Boolean = false
     private var overlayWidth: Int = 0
     private var overlayHeight: Int = 0
 
@@ -169,6 +174,7 @@ class FaceDetectionOverlay(
                 val (metrics, results) =
                     viewModel.imageVectorUseCase.getNearestPersonName(
                         frameBitmap,
+                        flatSearch,
                     )
                 results.forEach { (name, boundingBox, spoofResult) ->
                     val box = boundingBox.toRectF()

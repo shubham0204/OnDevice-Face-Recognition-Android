@@ -55,7 +55,10 @@ class ImageVectorUseCase(
 
     // From the given frame, return the name of the person by performing
     // face recognition
-    suspend fun getNearestPersonName(frameBitmap: Bitmap): Pair<RecognitionMetrics?, List<FaceRecognitionResult>> {
+    suspend fun getNearestPersonName(
+        frameBitmap: Bitmap,
+        flatSearch: Boolean,
+    ): Pair<RecognitionMetrics?, List<FaceRecognitionResult>> {
         // Perform face-detection and get the cropped face as a Bitmap
         val (faceDetectionResult, t1) =
             measureTimedValue { mediapipeFaceDetector.getAllCroppedFaces(frameBitmap) }
@@ -71,7 +74,7 @@ class ImageVectorUseCase(
             avgT2 += t2.toLong(DurationUnit.MILLISECONDS)
             // Perform nearest-neighbor search
             val (recognitionResult, t3) =
-                measureTimedValue { imagesVectorDB.getNearestEmbeddingPersonName(embedding) }
+                measureTimedValue { imagesVectorDB.getNearestEmbeddingPersonName(embedding, flatSearch) }
             avgT3 += t3.toLong(DurationUnit.MILLISECONDS)
             if (recognitionResult == null) {
                 faceRecognitionResults.add(FaceRecognitionResult("Not recognized", boundingBox))
