@@ -2,14 +2,12 @@ package com.ml.shubham0204.facenet_android.domain.embeddings
 
 import android.content.Context
 import android.graphics.Bitmap
+import com.google.ai.edge.litert.Accelerator
+import com.google.ai.edge.litert.CompiledModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
 import org.tensorflow.lite.DataType
-import org.tensorflow.lite.Interpreter
-import org.tensorflow.lite.gpu.CompatibilityList
-import org.tensorflow.lite.gpu.GpuDelegate
-import org.tensorflow.lite.support.common.FileUtil
 import org.tensorflow.lite.support.common.TensorOperator
 import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
@@ -23,9 +21,7 @@ import java.nio.ByteBuffer
 // Utility class for FaceNet model
 @Single
 class FaceNet(
-    context: Context,
-    useGpu: Boolean = true,
-    useXNNPack: Boolean = true,
+    context: Context
 ) {
     // Input image size for FaceNet model.
     private val imgSize = 160
@@ -33,7 +29,9 @@ class FaceNet(
     // Output embedding size
     private val embeddingDim = 512
 
-    private var interpreter: Interpreter
+    private var compiledModel: CompiledModel
+    private val inputBuffers: List<com.google.ai.edge.litert.TensorBuffer>
+    private val outputBuffers: List<com.google.ai.edge.litert.TensorBuffer>
     private val imageTensorProcessor =
         ImageProcessor
             .Builder()
@@ -42,24 +40,13 @@ class FaceNet(
             .build()
 
     init {
-        // Initialize TFLiteInterpreter
-        val interpreterOptions =
-            Interpreter.Options().apply {
-                // Add the GPU Delegate if supported.
-                // See -> https://www.tensorflow.org/lite/performance/gpu#android
-                if (useGpu) {
-                    if (CompatibilityList().isDelegateSupportedOnThisDevice) {
-                        addDelegate(GpuDelegate(CompatibilityList().bestOptionsForThisDevice))
-                    }
-                } else {
-                    // Number of threads for computation
-                    numThreads = 4
-                }
-                useXNNPACK = useXNNPack
-                useNNAPI = true
-            }
-        interpreter =
-            Interpreter(FileUtil.loadMappedFile(context, "facenet_512.tflite"), interpreterOptions)
+        compiledModel = CompiledModel.create(
+            context.assets,
+            "facenet_512.tflite",
+            CompiledModel.Options(Accelerator.CPU)
+        )
+        inputBuffers = compiledModel.createInputBuffers()
+        outputBuffers = compiledModel.createOutputBuffers()
     }
 
     // Gets an face embedding using FaceNet
@@ -69,14 +56,15 @@ class FaceNet(
         }
 
     // Run the FaceNet model
-    private fun runFaceNet(inputs: Any): Array<FloatArray> {
-        val faceNetModelOutputs = Array(1) { FloatArray(embeddingDim) }
-        interpreter.run(inputs, faceNetModelOutputs)
-        return faceNetModelOutputs
+    private fun runFaceNet(inputs: ByteBuffer): Array<FloatArray> {
+        inputBuffers[0].writeInt8(inputs.array())
+        compiledModel.run(inputBuffers, outputBuffers)
+        return arrayOf(outputBuffers[0].readFloat())
     }
 
     // Resize the given bitmap and convert it to a ByteBuffer
-    private fun convertBitmapToBuffer(image: Bitmap): ByteBuffer = imageTensorProcessor.process(TensorImage.fromBitmap(image)).buffer
+    private fun convertBitmapToBuffer(image: Bitmap): ByteBuffer =
+        imageTensorProcessor.process(TensorImage.fromBitmap(image)).buffer
 
     class NormalizeOp : TensorOperator {
         override fun apply(p0: TensorBuffer?): TensorBuffer {

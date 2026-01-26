@@ -10,16 +10,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
 import org.tensorflow.lite.DataType
-import org.tensorflow.lite.Interpreter
-import org.tensorflow.lite.gpu.CompatibilityList
-import org.tensorflow.lite.gpu.GpuDelegate
-import org.tensorflow.lite.support.common.FileUtil
 import org.tensorflow.lite.support.common.ops.CastOp
 import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
 import kotlin.math.exp
 import kotlin.time.DurationUnit
 import kotlin.time.measureTime
+import androidx.core.graphics.scale
+import com.google.ai.edge.litert.Accelerator
+import com.google.ai.edge.litert.CompiledModel
 
 /*
 
@@ -51,8 +50,12 @@ class FaceSpoofDetector(
     private val inputImageDim = 80
     private val outputDim = 3
 
-    private var firstModelInterpreter: Interpreter
-    private var secondModelInterpreter: Interpreter
+    private var compiledModel27: CompiledModel
+    private var compiledModel40: CompiledModel
+    private val compiledModel27InputBuffers: List<com.google.ai.edge.litert.TensorBuffer>
+    private val compiledModel27OutputBuffers: List<com.google.ai.edge.litert.TensorBuffer>
+    private val compiledModel40InputBuffers: List<com.google.ai.edge.litert.TensorBuffer>
+    private val compiledModel40OutputBuffers: List<com.google.ai.edge.litert.TensorBuffer>
     private val imageTensorProcessor =
         ImageProcessor
             .Builder()
@@ -60,32 +63,20 @@ class FaceSpoofDetector(
             .build()
 
     init {
-        // Initialize TFLiteInterpreter
-        val interpreterOptions =
-            Interpreter.Options().apply {
-                // Add the GPU Delegate if supported.
-                // See -> https://www.tensorflow.org/lite/performance/gpu#android
-                if (useGpu) {
-                    if (CompatibilityList().isDelegateSupportedOnThisDevice) {
-                        addDelegate(GpuDelegate(CompatibilityList().bestOptionsForThisDevice))
-                    }
-                } else {
-                    // Number of threads for computation
-                    numThreads = 4
-                }
-                useXNNPACK = useXNNPack
-                this.useNNAPI = useNNAPI
-            }
-        firstModelInterpreter =
-            Interpreter(
-                FileUtil.loadMappedFile(context, "spoof_model_scale_2_7.tflite"),
-                interpreterOptions,
-            )
-        secondModelInterpreter =
-            Interpreter(
-                FileUtil.loadMappedFile(context, "spoof_model_scale_4_0.tflite"),
-                interpreterOptions,
-            )
+        compiledModel27 = CompiledModel.create(
+            context.assets,
+            "spoof_model_scale_2_7.tflite",
+            CompiledModel.Options(Accelerator.GPU)
+        )
+        compiledModel27InputBuffers = compiledModel27.createInputBuffers()
+        compiledModel27OutputBuffers = compiledModel27.createOutputBuffers()
+        compiledModel40 = CompiledModel.create(
+            context.assets,
+            "spoof_model_scale_4_0.tflite",
+            CompiledModel.Options(Accelerator.GPU)
+        )
+        compiledModel40InputBuffers = compiledModel40.createInputBuffers()
+        compiledModel40OutputBuffers = compiledModel40.createOutputBuffers()
     }
 
     suspend fun detectSpoof(
@@ -134,14 +125,17 @@ class FaceSpoofDetector(
             }
             val input1 = imageTensorProcessor.process(TensorImage.fromBitmap(croppedImage1)).buffer
             val input2 = imageTensorProcessor.process(TensorImage.fromBitmap(croppedImage2)).buffer
-            val output1 = arrayOf(FloatArray(outputDim))
-            val output2 = arrayOf(FloatArray(outputDim))
+            compiledModel27InputBuffers[0].writeInt8(input1.array())
+            compiledModel40InputBuffers[0].writeInt8(input2.array())
 
             val time =
                 measureTime {
-                    firstModelInterpreter.run(input1, output1)
-                    secondModelInterpreter.run(input2, output2)
+                    compiledModel27.run(compiledModel27InputBuffers, compiledModel27OutputBuffers)
+                    compiledModel40.run(compiledModel40InputBuffers, compiledModel40OutputBuffers)
                 }.toLong(DurationUnit.MILLISECONDS)
+
+            val output1 = arrayOf(compiledModel27OutputBuffers[0].readFloat())
+            val output2 = arrayOf(compiledModel40OutputBuffers[0].readFloat())
 
             val output =
                 softMax(output1[0]).zip(softMax(output2[0])).map {
@@ -178,7 +172,7 @@ class FaceSpoofDetector(
                 scaledBox.width(),
                 scaledBox.height(),
             )
-        return Bitmap.createScaledBitmap(croppedBitmap, targetWidth, targetHeight, true)
+        return croppedBitmap.scale(targetWidth, targetHeight)
     }
 
     private fun getScaledBox(

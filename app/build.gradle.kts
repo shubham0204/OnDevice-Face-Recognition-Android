@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "com.ml.shubham0204.facenet_android"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.ml.shubham0204.facenet_android"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "0.0.1"
 
@@ -94,9 +94,9 @@ dependencies {
 
     // TensorFlow Lite dependencies
     implementation(libs.tensorflow.lite)
-    implementation(libs.tensorflow.lite.gpu)
-    implementation(libs.tensorflow.lite.gpu.api)
-    implementation(libs.tensorflow.lite.support)
+    implementation(libs.tensorflow.lite.support) {
+        exclude(group = "com.google.ai.edge.litert", module = "litert-api")
+    }
 
     // DocumentFile and ExitInterface
     implementation(libs.androidx.documentfile)
