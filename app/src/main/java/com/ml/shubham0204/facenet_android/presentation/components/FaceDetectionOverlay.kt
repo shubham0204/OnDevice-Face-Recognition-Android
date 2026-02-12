@@ -41,7 +41,7 @@ class FaceDetectionOverlay(
     // of cosine similarity.
     // This is slower than ObjectBox's vector search, which approximates
     // nearest neighbor search
-    private val flatSearch: Boolean = false
+    private val flatSearch: Boolean = true
     private var overlayWidth: Int = 0
     private var overlayHeight: Int = 0
 

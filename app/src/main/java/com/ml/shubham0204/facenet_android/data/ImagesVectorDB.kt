@@ -9,6 +9,7 @@ import org.koin.core.annotation.Single
 @Single
 class ImagesVectorDB {
     private val imagesBox = ObjectBoxStore.store.boxFor(FaceImageRecord::class.java)
+    private val userNameToSearch = "shubham"
 
     fun addFaceImageRecord(record: FaceImageRecord) {
         imagesBox.put(record)
@@ -21,8 +22,14 @@ class ImagesVectorDB {
         // Enabling `flatSearch` disables ObjectBox's vector search (ANN based on HNSW)
         // and performs a linear-search to precisely compute the nearest neighbors
         if (flatSearch) {
-            val allRecords = imagesBox.all
-            val numThreads = 4
+            val allRecords = imagesBox
+                .query(FaceImageRecord_.personName.equal(userNameToSearch))
+                .build()
+                .find()
+            if (allRecords.isEmpty()) {
+                return null
+            }
+            val numThreads = 1
             val batchSize = allRecords.size / numThreads
             val batches = allRecords.chunked(batchSize)
             val results =
