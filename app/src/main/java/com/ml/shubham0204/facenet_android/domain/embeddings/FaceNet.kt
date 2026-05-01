@@ -2,64 +2,36 @@ package com.ml.shubham0204.facenet_android.domain.embeddings
 
 import android.content.Context
 import android.graphics.Bitmap
+import androidx.core.graphics.scale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
-import org.tensorflow.lite.DataType
-import org.tensorflow.lite.Interpreter
-import org.tensorflow.lite.gpu.CompatibilityList
-import org.tensorflow.lite.gpu.GpuDelegate
-import org.tensorflow.lite.support.common.FileUtil
-import org.tensorflow.lite.support.common.TensorOperator
-import org.tensorflow.lite.support.image.ImageProcessor
-import org.tensorflow.lite.support.image.TensorImage
-import org.tensorflow.lite.support.image.ops.ResizeOp
-import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
-import org.tensorflow.lite.support.tensorbuffer.TensorBufferFloat
-import java.nio.ByteBuffer
+import org.pytorch.executorch.EValue
+import org.pytorch.executorch.Module
+import org.pytorch.executorch.Tensor
+import java.io.File
+import java.io.FileOutputStream
 
 // Derived from the original project:
 // https://github.com/shubham0204/FaceRecognition_With_FaceNet_Android/blob/master/app/src/main/java/com/ml/quaterion/facenetdetection/model/FaceNetModel.kt
 // Utility class for FaceNet model
 @Single
-class FaceNet(
-    context: Context,
-    useGpu: Boolean = true,
-    useXNNPack: Boolean = true,
-) {
+class FaceNet(val context: Context) {
     // Input image size for FaceNet model.
-    private val imgSize = 160
+    private val imgSize = 160L
 
-    // Output embedding size
-    private val embeddingDim = 512
+    private var module: Module
 
-    private var interpreter: Interpreter
-    private val imageTensorProcessor =
-        ImageProcessor
-            .Builder()
-            .add(ResizeOp(imgSize, imgSize, ResizeOp.ResizeMethod.BILINEAR))
-            .add(NormalizeOp())
-            .build()
-
+    /**
+     * NOTE:
+     * Download the model from here:
+     * https://huggingface.co/shubhxm0204/facenet-executorch/blob/main/vggface2-inception-resnetv1-xnnpack-fp32
+     *
+     * set the correct name below in the argument of copyAndReturnPath()
+     * and place it in the assets folder
+     */
     init {
-        // Initialize TFLiteInterpreter
-        val interpreterOptions =
-            Interpreter.Options().apply {
-                // Add the GPU Delegate if supported.
-                // See -> https://www.tensorflow.org/lite/performance/gpu#android
-                if (useGpu) {
-                    if (CompatibilityList().isDelegateSupportedOnThisDevice) {
-                        addDelegate(GpuDelegate(CompatibilityList().bestOptionsForThisDevice))
-                    }
-                } else {
-                    // Number of threads for computation
-                    numThreads = 4
-                }
-                useXNNPACK = useXNNPack
-                useNNAPI = true
-            }
-        interpreter =
-            Interpreter(FileUtil.loadMappedFile(context, "facenet_512.tflite"), interpreterOptions)
+        module = Module.load(copyAndReturnPath("model.pte"))
     }
 
     // Gets an face embedding using FaceNet
@@ -69,21 +41,44 @@ class FaceNet(
         }
 
     // Run the FaceNet model
-    private fun runFaceNet(inputs: Any): Array<FloatArray> {
-        val faceNetModelOutputs = Array(1) { FloatArray(embeddingDim) }
-        interpreter.run(inputs, faceNetModelOutputs)
-        return faceNetModelOutputs
+    private fun runFaceNet(inputs: FloatArray): Array<FloatArray> {
+        val imageTensor = Tensor.fromBlob(
+            inputs,
+            longArrayOf(1, imgSize, imgSize, 3)
+        )
+        val outputTensor = module.forward(EValue.from(imageTensor))[0].toTensor()
+        val embedding = outputTensor.dataAsFloatArray
+        return arrayOf(embedding)
     }
 
     // Resize the given bitmap and convert it to a ByteBuffer
-    private fun convertBitmapToBuffer(image: Bitmap): ByteBuffer = imageTensorProcessor.process(TensorImage.fromBitmap(image)).buffer
-
-    class NormalizeOp : TensorOperator {
-        override fun apply(p0: TensorBuffer?): TensorBuffer {
-            val pixels = p0!!.floatArray.map { it / 255f }.toFloatArray()
-            val output = TensorBufferFloat.createFixedSize(p0.shape, DataType.FLOAT32)
-            output.loadArray(pixels)
-            return output
+    private fun convertBitmapToBuffer(image: Bitmap): FloatArray {
+        val resizedBitmap = image.scale(160, 160, true)
+        val pixels = IntArray(160 * 160)
+        resizedBitmap.getPixels(pixels, 0, 160, 0, 0, 160, 160)
+        val floats = FloatArray(160 * 160 * 3)
+        var i = 0
+        for (p in pixels) {
+            floats[i++] = ((p shr 16) and 0xFF).toFloat()  // R
+            floats[i++] = ((p shr 8) and 0xFF).toFloat()   // G
+            floats[i++] = (p and 0xFF).toFloat()           // B
         }
+        return floats
     }
+
+    // Copy the file from the assets to the app's internal/private storage
+    // and return its absolute path
+    private fun copyAndReturnPath(assetsFilepath: String): String {
+        val storageFile = File(context.filesDir, assetsFilepath)
+        if (!storageFile.exists()) {
+            storageFile.parentFile?.mkdir()
+            FileOutputStream(storageFile).use { outputStream ->
+                context.assets.open(assetsFilepath).use { inputStream ->
+                    inputStream.copyTo(outputStream)
+                }
+            }
+        }
+        return storageFile.absolutePath
+    }
+
 }
