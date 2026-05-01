@@ -92,7 +92,8 @@ dependencies {
     implementation(libs.koin.androidx.compose)
     ksp(libs.koin.ksp.compiler)
 
-    // TensorFlow Lite dependencies
+    // ExecuTorch
+    implementation("org.pytorch:executorch-android:1.2.0")
     implementation(libs.tensorflow.lite)
     implementation(libs.tensorflow.lite.gpu)
     implementation(libs.tensorflow.lite.gpu.api)
