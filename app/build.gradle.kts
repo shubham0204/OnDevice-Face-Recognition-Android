@@ -83,8 +83,8 @@ dependencies {
     implementation(libs.androidx.ui.text.google.fonts)
 
     // ObjectBox - vector database
-    debugImplementation("io.objectbox:objectbox-android-objectbrowser:4.0.0")
-    releaseImplementation("io.objectbox:objectbox-android:4.0.0")
+    debugImplementation("io.objectbox:objectbox-android-objectbrowser:5.4.2")
+    releaseImplementation("io.objectbox:objectbox-android:5.4.2")
 
     // dependency injection
     implementation(libs.koin.android)
