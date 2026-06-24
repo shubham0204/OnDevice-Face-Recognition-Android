@@ -123,3 +123,20 @@ dependencies {
 }
 
 apply(plugin = "io.objectbox")
+
+tasks.register("downloadModel") {
+    val modelUrl = "https://huggingface.co/shubhxm0204/facenet-executorch/resolve/main/vggface2-inception-resnetv1-xnnpack-fp32"
+    val targetFile = file("src/main/assets/model.pte")
+    outputs.file(targetFile)
+    doLast {
+        if (!targetFile.exists()) {
+            println("Downloading model from $modelUrl...")
+            targetFile.parentFile.mkdirs()
+            ant.invokeMethod("get", mapOf("src" to modelUrl, "dest" to targetFile))
+        }
+    }
+}
+
+tasks.named("preBuild") {
+    dependsOn("downloadModel")
+}
