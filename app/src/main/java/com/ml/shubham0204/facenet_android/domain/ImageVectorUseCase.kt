@@ -9,7 +9,6 @@ import com.ml.shubham0204.facenet_android.data.RecognitionMetrics
 import com.ml.shubham0204.facenet_android.domain.embeddings.FaceNet
 import com.ml.shubham0204.facenet_android.domain.face_detection.BaseFaceDetector
 import com.ml.shubham0204.facenet_android.domain.face_detection.FaceSpoofDetector
-import com.ml.shubham0204.facenet_android.domain.face_detection.MediapipeFaceDetector
 import org.koin.core.annotation.Single
 import kotlin.math.pow
 import kotlin.math.sqrt

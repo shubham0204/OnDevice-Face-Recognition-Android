@@ -94,6 +94,8 @@ dependencies {
 
     // ExecuTorch
     implementation("org.pytorch:executorch-android:1.2.0")
+
+    // LiteRT
     implementation(libs.tensorflow.lite)
     implementation(libs.tensorflow.lite.gpu)
     implementation(libs.tensorflow.lite.gpu.api)
@@ -111,9 +113,6 @@ dependencies {
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
-
-    // Mediapipe Face Detection
-    implementation(libs.tasks.vision)
 
     // MLKit Face Detection
     implementation("com.google.mlkit:face-detection:16.1.7")
