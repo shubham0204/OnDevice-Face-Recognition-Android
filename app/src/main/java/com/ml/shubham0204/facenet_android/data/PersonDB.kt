@@ -1,30 +1,21 @@
 package com.ml.shubham0204.facenet_android.data
 
-import io.objectbox.kotlin.flow
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOn
+import android.content.Context
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
 import org.koin.core.annotation.Single
 
+@Database(
+    entities = [PersonRecord::class],
+    version = 1,
+)
+abstract class AppRoomDatabase : RoomDatabase() {
+    abstract fun personRecordsDao(): PersonRecordDao
+}
+
 @Single
-class PersonDB {
-    private val personBox = ObjectBoxStore.store.boxFor(PersonRecord::class.java)
-
-    fun addPerson(person: PersonRecord): Long = personBox.put(person)
-
-    fun removePerson(personID: Long) {
-        personBox.removeByIds(listOf(personID))
-    }
-
-    // Returns the number of records present in the collection
-    fun getCount(): Long = personBox.count()
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    fun getAll(): Flow<MutableList<PersonRecord>> =
-        personBox
-            .query(PersonRecord_.personID.notNull())
-            .build()
-            .flow()
-            .flowOn(Dispatchers.IO)
+class AppDB(context: Context) {
+    val db =
+        Room.databaseBuilder(context, AppRoomDatabase::class.java, "app-database").build()
 }

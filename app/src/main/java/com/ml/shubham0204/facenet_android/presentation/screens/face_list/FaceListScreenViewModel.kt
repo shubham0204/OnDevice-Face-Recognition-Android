@@ -14,8 +14,8 @@ class FaceListScreenViewModel(
 
     // Remove the person from `PersonRecord`
     // and all associated face embeddings from `FaceImageRecord`
-    fun removeFace(id: Long) {
-        personUseCase.removePerson(id)
-        imageVectorUseCase.removeImages(id)
+    fun removeFace(name: String) {
+        personUseCase.removePerson(name)
+        imageVectorUseCase.removeImages(name)
     }
 }

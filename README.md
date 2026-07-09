@@ -2,8 +2,6 @@
 
 > A simple Android app that performs on-device face recognition by comparing FaceNet embeddings against a vector database of user-given faces
 
-<img src="https://github.com/user-attachments/assets/3a79776c-e5dd-48c3-8b84-6ec3eaf32d2f" width="80%"/>
-
 <img src="https://github.com/user-attachments/assets/2bbdb033-e709-40f1-8326-1634768e5a3c" width="80%"/>
 
 > Download the APK from the [Releases](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/releases)
@@ -29,6 +27,10 @@
 
 ## Updates
 
+* 2026-06:
+  1. Use ExecuTorch instead of LiteRT (TensorFlow Lite) as a runtime for the FaceNet model
+  2. Use only MLKit's Face Detector and remove Mediapipe's Face Detection service
+  3. 
 * 2025-12: Add new FaceNet models with known sources, enable MLKit for face detection and precise NN-search
 * 2024-09: Add face-spoof detection which uses FASNet from [minivision-ai/Silent-Face-Anti-Spoofing](https://github.com/minivision-ai/Silent-Face-Anti-Spoofing)
 * 2024-07: Add latency metrics on the main screen. It shows the time taken (in milliseconds) to perform face detection, face embedding and vector search.
@@ -50,50 +52,6 @@ $> git clone --depth=1 https://github.com/shubham0204/OnDevice-Face-Recognition-
 ```
 
 Perform a Gradle sync, and run the application.
-
-### Choosing the FaceNet model
-
-The app provides two FaceNet models differing in the size of the embedding they provide. `facenet.tflite` outputs a 128-dimensional embedding and `facenet_512.tflite` a 512-dimensional embedding. In [FaceNet.kt](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/blob/main/app/src/main/java/com/ml/shubham0204/facenet_android/domain/embeddings/FaceNet.kt), you may change the model by modifying the path of the TFLite model,
-
-```kotlin
-// facenet
-interpreter =
-    Interpreter(FileUtil.loadMappedFile(context, "facenet.tflite"), interpreterOptions)
-
-// facenet-512
-interpreter =
-            Interpreter(FileUtil.loadMappedFile(context, "facenet_512.tflite"), interpreterOptions)
-```
-
-For change `embeddingDims` in the same file,
-
-```kotlin
-// facenet
-private val embeddingDim = 128
-
-// facenet-512
-private val embeddingDim = 512
-```
-
-Then, in [DataModels.kt](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/blob/main/app/src/main/java/com/ml/shubham0204/facenet_android/data/DataModels.kt), change the dimensions of the `faceEmbedding` attribute,
-
-```kotlin
-@Entity
-data class FaceImageRecord(
-    // primary-key of `FaceImageRecord`
-    @Id var recordID: Long = 0,
-
-    // personId is derived from `PersonRecord`
-    @Index var personID: Long = 0,
-
-    var personName: String = "",
-
-    // the FaceNet-512 model provides a 512-dimensional embedding
-    // the FaceNet model provides a 128-dimensional embedding
-    @HnswIndex(dimensions = 512)
-    var faceEmbedding: FloatArray = floatArrayOf()
-)
-```
 
 ### Enable Flat Index Search (Precise NN Search)
 
@@ -126,26 +84,6 @@ class FaceDetectionOverlay(
 
 This triggers a linear-search across all records in the database, which is slower but returns the 'precise' nearest neighbor. The time taken by the linear-search to scan all records is reduced by parallelizing the search over 4 coroutines.
 
-### Choose Mediapipe or MLKit for face detection
-
-The app can be configured to use either Mediapipe or MLKit for face detection. In [`AppModule.kt`](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/blob/main/app/src/main/java/com/ml/shubham0204/facenet_android/di/AppModule.kt), set `isMLKit` to `true` for using MLKit, else set it to `false` for using Mediapipe.
-
-```kotlin
-@Module
-@ComponentScan("com.ml.shubham0204.facenet_android")
-class AppModule {
-
-    private var isMLKit = true
-
-    @Single
-    fun provideFaceDetector(context: Context): BaseFaceDetector = if (isMLKit) {
-        MLKitFaceDetector(context)
-    } else {
-        MediapipeFaceDetector(context)
-    }
-}
-```
-
 ## Working
 
 ![working](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/assets/41076823/def3d020-e36a-44c6-b964-866786c36e3d)
@@ -161,63 +99,20 @@ We use the [FaceNet](https://arxiv.org/abs/1503.03832) model, which given a 160 
 
 ## Tools
 
-1. [TensorFlow Lite](https://ai.google.dev/edge/lite) as a runtime to execute the FaceNet model
+1. [ExecuTorch](https://github.com/pytorch/executorch) as a runtime to execute the FaceNet model
 2. [Mediapipe Face Detection](https://ai.google.dev/edge/mediapipe/solutions/vision/face_detector/android) to crop faces from the image
 3. [ObjectBox](https://objectbox.io) for on-device vector-store and NoSQL database
+4. [TensorFlow Lite](https://ai.google.dev/edge/lite) as a runtime to execute the spoof detection models
 
 ## Source of TFLite models
 
-### `facenet.tflite` and `facenet_512.tflite`
+### FaceNet ExecuTorch Model (`model.pte`)
 
-The `facenet` TFLite models are sourced from the popular [`deepface`](https://github.com/serengil/deepface) library,
 
-```python
-from deepface import DeepFace
-from deepface.models.facial_recognition.Facenet import scaling
-import tensorflow as tf
-
-model = DeepFace.build_model("Facenet")
-model.model.save("facenet.keras")
-
-model = tf.keras.models.load_model("facenet.keras", custom_objects={
-    "scaling": scaling
-})
-converter_fp16 = tf.lite.TFLiteConverter.from_keras_model(model)
-converter_fp16.optimizations = [tf.lite.Optimize.DEFAULT]
-converter_fp16.target_spec.supported_types = [tf.float16]
-tflite_model_fp16 = converter_fp16.convert()
-
-with open("facenet.tflite", "wb") as file:
-    file.write(tflite_model_fp16)
-```
-
-```python
-from deepface import DeepFace
-from deepface.models.facial_recognition.Facenet import scaling
-import tensorflow as tf
-
-model = DeepFace.build_model("Facenet512")
-model.model.save("facenet512.keras")
-
-model = tf.keras.models.load_model("facenet512.keras", custom_objects={
-    "scaling": scaling
-})
-converter_fp16 = tf.lite.TFLiteConverter.from_keras_model(model)
-converter_fp16.optimizations = [tf.lite.Optimize.DEFAULT]
-converter_fp16.target_spec.supported_types = [tf.float16]
-tflite_model_fp16 = converter_fp16.convert()
-
-with open("facenet_512.tflite", "wb") as file:
-    file.write(tflite_model_fp16)
-```
 
 ### `spoof_model_scale` TFLite models
 
 [PyTorch model weights](https://github.com/serengil/deepface/blob/master/deepface/models/spoofing/FasNetBackbone.py) were converted to TFLite via ONNX.
-
-### `blaze_face_short_range` TFLite model
-
-Check the [Mediapipe FaceDetector docs](https://ai.google.dev/edge/mediapipe/solutions/vision/face_detector#blazeface_short-range) for more information on the model.
 
 ## Discussion
 
