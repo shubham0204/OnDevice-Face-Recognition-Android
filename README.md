@@ -1,47 +1,35 @@
-# On-Device Face Recognition In Android 
+# On-Device Face Recognition In Android
 
-> A simple Android app that performs on-device face recognition by comparing FaceNet embeddings against a vector database of user-given faces
-
-<img src="https://github.com/user-attachments/assets/3a79776c-e5dd-48c3-8b84-6ec3eaf32d2f" width="80%"/>
+> A simple Android app that performs on-device face recognition by comparing FaceNet embeddings
+> against a vector database of user-given faces
 
 <img src="https://github.com/user-attachments/assets/2bbdb033-e709-40f1-8326-1634768e5a3c" width="80%"/>
 
-> Download the APK from the [Releases](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/releases)
-
-- [On-Device Face Recognition In Android ](#on-device-face-recognition-in-android)
-    * [Updates](#updates)
-    * [Goals](#goals)
-    * [Setup](#setup)
-        + [Choosing the FaceNet model](#choosing-the-facenet-model)
-        + [Enable Flat Index Search (Precise NN Search)](#enable-flat-index-search-precise-nn-search)
-        + [Choose Mediapipe or MLKit for face detection](#choose-mediapipe-or-mlkit-for-face-detection)
-    * [Working](#working)
-    * [Tools](#tools)
-    * [Source of TFLite models](#source-of-tflite-models)
-        + [`facenet.tflite` and `facenet_512.tflite`](#facenettflite-and-facenet_512tflite)
-        + [`spoof_model_scale` TFLite models](#spoof_model_scale-tflite-models)
-        + [`blaze_face_short_range` TFLite model](#blaze_face_short_range-tflite-model)
-    * [Discussion](#discussion)
-        + [Implementing face-liveness detection](#implementing-face-liveness-detection)
-        + [How does this project differ from my earlier `FaceRecognition_With_FaceNet_Android` project?](#how-does-this-project-differ-from-my-earlier-facerecognition_with_facenet_android-project)
-            - [Similarities](#similarities)
-            - [Differences](#differences)
+> Download the APK from
+> the [Releases](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/releases)
 
 ## Updates
 
-* 2025-12: Add new FaceNet models with known sources, enable MLKit for face detection and precise NN-search
-* 2024-09: Add face-spoof detection which uses FASNet from [minivision-ai/Silent-Face-Anti-Spoofing](https://github.com/minivision-ai/Silent-Face-Anti-Spoofing)
-* 2024-07: Add latency metrics on the main screen. It shows the time taken (in milliseconds) to perform face detection, face embedding and vector search.
+| Date        | Description                                                                                                                                           |
+|:------------|:------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **2026-08** | Integrate [face-recognition.cpp](https://github.com/shubham0204/face-recognition.cpp), reducing app size and face recognition latency                 |
+| **2025-12** | Add new FaceNet models with known sources, enable MLKit for face detection and precise NN-search                                                      |
+| **2024-09** | Add face-spoof detection which uses FASNet from [minivision-ai/Silent-Face-Anti-Spoofing](https://github.com/minivision-ai/Silent-Face-Anti-Spoofing) |
+| **2024-07** | Add latency metrics on the main screen. It shows the time taken (in milliseconds) to perform face detection, face embedding and vector search.        |
 
 ## Goals
 
-* Produce on-device face embeddings with FaceNet and use them to perform face recognition on a user-given set of images
-* Store face-embedding and other metadata on-device and use vector-search to determine nearest-neighbors
-* Use modern Android development practices and recommended architecture guidelines while maintaining code simplicity and modularity
+* Produce on-device face embeddings with FaceNet and use them to perform face recognition on a
+  user-given set of images
+* Store face-embedding and other metadata on-device and use vector-search to determine
+  nearest-neighbors
+* Use modern Android development practices and recommended architecture guidelines while maintaining
+  code simplicity and modularity
 
 ## Setup
 
-> Download the APK from the [Releases](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/releases)
+> Download the APK from
+> the [Releases](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/releases)
 
 Clone the `main` branch,
 
@@ -51,200 +39,82 @@ $> git clone --depth=1 https://github.com/shubham0204/OnDevice-Face-Recognition-
 
 Perform a Gradle sync, and run the application.
 
-### Choosing the FaceNet model
-
-The app provides two FaceNet models differing in the size of the embedding they provide. `facenet.tflite` outputs a 128-dimensional embedding and `facenet_512.tflite` a 512-dimensional embedding. In [FaceNet.kt](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/blob/main/app/src/main/java/com/ml/shubham0204/facenet_android/domain/embeddings/FaceNet.kt), you may change the model by modifying the path of the TFLite model,
-
-```kotlin
-// facenet
-interpreter =
-    Interpreter(FileUtil.loadMappedFile(context, "facenet.tflite"), interpreterOptions)
-
-// facenet-512
-interpreter =
-            Interpreter(FileUtil.loadMappedFile(context, "facenet_512.tflite"), interpreterOptions)
-```
-
-For change `embeddingDims` in the same file,
-
-```kotlin
-// facenet
-private val embeddingDim = 128
-
-// facenet-512
-private val embeddingDim = 512
-```
-
-Then, in [DataModels.kt](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/blob/main/app/src/main/java/com/ml/shubham0204/facenet_android/data/DataModels.kt), change the dimensions of the `faceEmbedding` attribute,
-
-```kotlin
-@Entity
-data class FaceImageRecord(
-    // primary-key of `FaceImageRecord`
-    @Id var recordID: Long = 0,
-
-    // personId is derived from `PersonRecord`
-    @Index var personID: Long = 0,
-
-    var personName: String = "",
-
-    // the FaceNet-512 model provides a 512-dimensional embedding
-    // the FaceNet model provides a 128-dimensional embedding
-    @HnswIndex(dimensions = 512)
-    var faceEmbedding: FloatArray = floatArrayOf()
-)
-```
-
-### Enable Flat Index Search (Precise NN Search)
-
-The nearest-neighbor technique used by ObjectBox (vector-store used in the app) is an ANN (Approximate Nearest Neighbor) technique. ANNs techniques do not always return the nearest neighbors to a given vector, but are generally faster than precise NN search techniques.
-
-In the app, a threshold is applied to the distance of the nearest neighbor to determine if the neighbor belongs to the set of recognizable faces i.e. if the search result should be `NOT RECOGNIZED`. As discussed in issue #25, the performance of face recognition is affected if the nearest neighbor search is approximate, especially over a larger dataset.
-
-To disable ObjectBox's HNSW ANN search, set `flatSearch` to `true` in `FaceDetectionOverlay.kt`,
-
-```kotlin
-@SuppressLint("ViewConstructor")
-@ExperimentalGetImage
-class FaceDetectionOverlay(
-    private val lifecycleOwner: LifecycleOwner,
-    private val context: Context,
-    private val viewModel: DetectScreenViewModel,
-) : FrameLayout(context) {
-    
-    // Setting `flatSearch` to `true` enables precise calculation
-    // of cosine similarity.
-    // This is slower than ObjectBox's vector search, which approximates
-    // nearest neighbor search
-    private val flatSearch: Boolean = false
-    
-    private var overlayWidth: Int = 0
-    private var overlayHeight: Int = 0
-    // ...
-}
-```
-
-This triggers a linear-search across all records in the database, which is slower but returns the 'precise' nearest neighbor. The time taken by the linear-search to scan all records is reduced by parallelizing the search over 4 coroutines.
-
-### Choose Mediapipe or MLKit for face detection
-
-The app can be configured to use either Mediapipe or MLKit for face detection. In [`AppModule.kt`](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/blob/main/app/src/main/java/com/ml/shubham0204/facenet_android/di/AppModule.kt), set `isMLKit` to `true` for using MLKit, else set it to `false` for using Mediapipe.
-
-```kotlin
-@Module
-@ComponentScan("com.ml.shubham0204.facenet_android")
-class AppModule {
-
-    private var isMLKit = true
-
-    @Single
-    fun provideFaceDetector(context: Context): BaseFaceDetector = if (isMLKit) {
-        MLKitFaceDetector(context)
-    } else {
-        MediapipeFaceDetector(context)
-    }
-}
-```
-
 ## Working
 
-![working](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/assets/41076823/def3d020-e36a-44c6-b964-866786c36e3d)
+![](resources/face_recognition_working.png)
 
-
-We use the [FaceNet](https://arxiv.org/abs/1503.03832) model, which given a 160 * 160 cropped face image, produces an embedding of 128 or 512 elements capturing facial features that uniquely identify the face. We represent the embedding model as a function $M$ that accepts a cropped face image and returns a vector/embedding/list of FP numbers.
-
-1. When users select an image, the app uses MLKit's `FaceDetector` to crop faces from the image. Each image is labelled with the person's name. See [`MLKitFaceDetector.kt`](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/blob/main/app/src/main/java/com/ml/shubham0204/facenet_android/domain/face_detection/MLKitFaceDetector.kt).
-2. Each cropped face is transformed into a vector/embedding with FaceNet. See [`FaceNet.kt`](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/blob/main/app/src/main/java/com/ml/shubham0204/facenet_android/domain/embeddings/FaceNet.kt).
-3. We store these face embeddings in a vector database, that enables a faster nearest-neighbor search.
-4. Now, in the camera preview, for each frame, we perform face detection with MLKit's `FaceDetector` as in (1) and produce face embeddings for the face as in (2). We compare this face embedding (query vector) with those present in the vector database, and determines the name/label of the embedding (nearest-neighbor) closest to the query vector using cosine similarity.
-5. The vector database performs a lossy compression on the embeddings stored in it, and hence the distance returned with the nearest-neighbor is also an estimate. Hence, we re-compute the cosine similarity between the nearest-neighbor vector and the query vector. See [`ImageVectorUseCase.kt`](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/blob/main/app/src/main/java/com/ml/shubham0204/facenet_android/domain/ImageVectorUseCase.kt)
+We use the [FaceNet](https://arxiv.org/abs/1503.03832) model, that given a 160 * 160 cropped face
+image, produces an embedding of 128 or 512 elements capturing facial features that uniquely identify
+the face.
 
 ## Tools
 
-1. [TensorFlow Lite](https://ai.google.dev/edge/lite) as a runtime to execute the FaceNet model
-2. [Mediapipe Face Detection](https://ai.google.dev/edge/mediapipe/solutions/vision/face_detector/android) to crop faces from the image
-3. [ObjectBox](https://objectbox.io) for on-device vector-store and NoSQL database
+1. [face-recognition.cpp](https://github.com/shubham0204/face-recognition.cpp) - Combines face
+   detection + recognition + vector search in a fast, accurate C++ library. It uses [ExecuTorch] as
+   the model runtime, [dlib] for face detection and a custom vector index implementation.
+2. [TensorFlow Lite](https://ai.google.dev/edge/lite) as a runtime to execute the spoof detection
+   models
 
-## Source of TFLite models
+## Models
 
-### `facenet.tflite` and `facenet_512.tflite`
+### FaceNet ExecuTorch Model (`model.pte`)
 
-The `facenet` TFLite models are sourced from the popular [`deepface`](https://github.com/serengil/deepface) library,
+The models were sourced from the `facenet_pytorch` package and with some modifications converted to the ExecuTorch format.
 
-```python
-from deepface import DeepFace
-from deepface.models.facial_recognition.Facenet import scaling
-import tensorflow as tf
-
-model = DeepFace.build_model("Facenet")
-model.model.save("facenet.keras")
-
-model = tf.keras.models.load_model("facenet.keras", custom_objects={
-    "scaling": scaling
-})
-converter_fp16 = tf.lite.TFLiteConverter.from_keras_model(model)
-converter_fp16.optimizations = [tf.lite.Optimize.DEFAULT]
-converter_fp16.target_spec.supported_types = [tf.float16]
-tflite_model_fp16 = converter_fp16.convert()
-
-with open("facenet.tflite", "wb") as file:
-    file.write(tflite_model_fp16)
-```
-
-```python
-from deepface import DeepFace
-from deepface.models.facial_recognition.Facenet import scaling
-import tensorflow as tf
-
-model = DeepFace.build_model("Facenet512")
-model.model.save("facenet512.keras")
-
-model = tf.keras.models.load_model("facenet512.keras", custom_objects={
-    "scaling": scaling
-})
-converter_fp16 = tf.lite.TFLiteConverter.from_keras_model(model)
-converter_fp16.optimizations = [tf.lite.Optimize.DEFAULT]
-converter_fp16.target_spec.supported_types = [tf.float16]
-tflite_model_fp16 = converter_fp16.convert()
-
-with open("facenet_512.tflite", "wb") as file:
-    file.write(tflite_model_fp16)
-```
+Check the [blog](https://shubham0204.github.io/blogpost/programming/convert-facenet-executorch) for more details.
 
 ### `spoof_model_scale` TFLite models
 
-[PyTorch model weights](https://github.com/serengil/deepface/blob/master/deepface/models/spoofing/FasNetBackbone.py) were converted to TFLite via ONNX.
-
-### `blaze_face_short_range` TFLite model
-
-Check the [Mediapipe FaceDetector docs](https://ai.google.dev/edge/mediapipe/solutions/vision/face_detector#blazeface_short-range) for more information on the model.
+[PyTorch model weights](https://github.com/serengil/deepface/blob/master/deepface/models/spoofing/FasNetBackbone.py) were converted to TFLite via ONNX. Check the [notebook](resources/Liveness_PT_Model_to_TF.ipynb) for the conversion code. 
 
 ## Discussion
+
+### Why integrate `face-recognition.cpp`?
+
+I started developing [face-recognition.cpp](https://github.com/shubham0204/face-recognition.cpp) as an end-to-end solution combining face-detection (using dlib), face-embedding generation (using ExecuTorch) and vector search (custom implementation) together. The prior versions of the app used MLKit, ExecuTorch and ObjectBox, each of which is a C++ codebase communicating with the app's Kotlin code through JNI. The idea was, if each of these components is a C++ codebase, why not prepare a custom C++ library combining the *native* versions of these components and eliminating any intermediate JNI overhead completely?
+
+Executing the idea, I realized that MLKit does not offer any C++ API, and it was replaced with dlib in face-recognition.cpp. Similarly, ObjectBox felt like a bulky component when the aim for store and search just a few hundred embeddings in-memory. I split the role of ObjectBox into two sections. The first section, where ObjectBox was storing information about the person (no vector embeddings) was replaced with Room (SQLite). The second section, where ObjectBox was storing/searching vector embeddings, was replaced with a custom implementation described in this [section of face-recognition.cpp](https://github.com/shubham0204/face-recognition.cpp#vector-database).
+
+I also tried porting the spoof detection models to ExecuTorch. The conversion was successfully, but I was not able to run it because of some errors. Hence, spoof detection still needs LiteRT.
+
+The app package size has reduced because of:
+1. Replacing ObjectBox with Room.
+2. Using ExecuTorch natively via C++ allows compiling the runtime with selected ops (using a CMake build option) thereby reducing the size of the runtime significantly. The shared libraries packaged in ExecuTorch AARs are not compiled with this build option.
 
 ### Implementing face-liveness detection
 
 > See [issue #1](https://github.com/shubham0204/OnDevice-Face-Recognition-Android/issues/1)
 
-Face-liveness detection is the process of determining if the face captured in the camera frame is real or a spoof (photo, 3D model etc.). There are many techniques to perform face-liveness detection, the simplest ones being smile or wink detection. These are effective against static spoofs (pictures or 3D models) but do not hold for videos. 
+Face-liveness detection is the process of determining if the face captured in the camera frame is
+real or a spoof (photo, 3D model etc.). There are many techniques to perform face-liveness
+detection, the simplest ones being smile or wink detection. These are effective against static
+spoofs (pictures or 3D models) but do not hold for videos.
 
-While exploring the [deepface](https://github.com/serengil/deepface) library, I discovered that it had implemented an *anti-spoof* detection system using the PyTorch models from [Silent-Face-Anti-Spoofing](https://github.com/minivision-ai/Silent-Face-Anti-Spoofing) repository. It uses the combination of two models that operate on two different scales of the same image. The model is penalized for classification-loss (cross-entropy loss) and the difference between the Fourier transform and the intermediate features from the CNN.
+While exploring the [deepface](https://github.com/serengil/deepface) library, I discovered that it
+had implemented an *anti-spoof* detection system using the PyTorch models
+from [Silent-Face-Anti-Spoofing](https://github.com/minivision-ai/Silent-Face-Anti-Spoofing)
+repository. It uses the combination of two models that operate on two different scales of the same
+image. The model is penalized for classification-loss (cross-entropy loss) and the difference
+between the Fourier transform and the intermediate features from the CNN.
 
-The models used by the `deepface` library (same as in the `Silent-Face-Anti-Spoofing`) are in the PyTorch format. The project already uses the TFLite runtime for executing the FaceNet model, and adding any other DL runtime would lead to unnecessary bloating of the application. 
+The models used by the `deepface` library (same as in the `Silent-Face-Anti-Spoofing`) are in the
+PyTorch format. The project already uses the TFLite runtime for executing the FaceNet model, and
+adding any other DL runtime would lead to unnecessary bloating of the application.
 
-I converted the PT models to TFLite using this notebook: https://github.com/shubham0204/OnDevice-Face-Recognition-Android/blob/main/resources/Liveness_PT_Model_to_TF.ipynb
+I converted the PT models to TFLite using this
+notebook: https://github.com/shubham0204/OnDevice-Face-Recognition-Android/blob/main/resources/Liveness_PT_Model_to_TF.ipynb
 
-### How does this project differ from my earlier [`FaceRecognition_With_FaceNet_Android`](https://github.com/shubham0204/FaceRecognition_With_FaceNet_Android) project?
+### How does this project differ from my earlier [`FaceRecognition_With_FaceNet_Android`](https://github.com/shubham0204/FaceRecognition_With_FaceNet_Android)
+project?
 
-The [FaceRecognition_With_FaceNet_Android](https://github.com/shubham0204/FaceRecognition_With_FaceNet_Android) is a similar project initiated in 2020 and re-iterated several times since then. Here are the key similarities and differences with this project:
-
-#### Similarities
-
-1. Use FaceNet and FaceNet-512 models executed with TensorFlow Lite
-2. Perform on-device face-recognition on a user-given dataset of images
+The [FaceRecognition_With_FaceNet_Android](https://github.com/shubham0204/FaceRecognition_With_FaceNet_Android)
+is a similar project initiated in 2020 and re-iterated several times since then. Here are the key
+similarities and differences with this project:
 
 #### Differences
 
-1. Uses ObjectBox to store face embeddings and perform nearest-neighbor search.
-2. Does not read a directory from the file-system, instead allows the user to select a group of photos and *label* them with name of a person
+1. Uses a custom C++ vector-store implementation to store face embeddings and perform nearest-neighbor search.
+2. Does not read a directory from the file-system, instead allows the user to select a group of
+   photos and *label* them with name of a person
 3. Considers only the nearest-neighbor to infer the identify of a person in the live camera-feed
-4. Uses the Mediapipe Face Detector instead of MLKit
+4. Uses the dlib instead of MLKit for face detection and ExecuTorch to run the FaceNet model.

@@ -1,19 +1,19 @@
 package com.ml.shubham0204.facenet_android.domain
 
-import com.ml.shubham0204.facenet_android.data.PersonDB
+import com.ml.shubham0204.facenet_android.data.AppDB
 import com.ml.shubham0204.facenet_android.data.PersonRecord
 import kotlinx.coroutines.flow.Flow
 import org.koin.core.annotation.Single
 
 @Single
 class PersonUseCase(
-    private val personDB: PersonDB,
+    private val appDB: AppDB
 ) {
     fun addPerson(
         name: String,
         numImages: Long,
     ): Long =
-        personDB.addPerson(
+        appDB.db.personRecordsDao().insertPersonRecord(
             PersonRecord(
                 personName = name,
                 numImages = numImages,
@@ -21,11 +21,11 @@ class PersonUseCase(
             ),
         )
 
-    fun removePerson(id: Long) {
-        personDB.removePerson(id)
+    fun removePerson(name: String) {
+        appDB.db.personRecordsDao().deletePersonRecord(name)
     }
 
-    fun getAll(): Flow<List<PersonRecord>> = personDB.getAll()
+    fun getAll(): Flow<List<PersonRecord>> = appDB.db.personRecordsDao().getAllPersonRecords()
 
-    fun getCount(): Long = personDB.getCount()
+    fun getCount(): Long = appDB.db.personRecordsDao().getCount()
 }
