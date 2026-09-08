@@ -120,19 +120,40 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 }
 
-tasks.register("downloadModel") {
-    val modelUrl = "https://huggingface.co/shubhxm0204/facenet-executorch/resolve/main/vggface2-inception-resnetv1-xnnpack-fp32"
-    val targetFile = file("src/main/assets/model.pte")
-    outputs.file(targetFile)
-    doLast {
-        if (!targetFile.exists()) {
-            println("Downloading model from $modelUrl...")
-            targetFile.parentFile.mkdirs()
-            ant.invokeMethod("get", mapOf("src" to modelUrl, "dest" to targetFile))
+val models = listOf(
+    "FaceNet512Quantized" to Pair(
+        "https://huggingface.co/shubhxm0204/facenet-executorch/resolve/main/vggface2-inception-resnetv1-xnnpack-int4",
+        "qmodel.pte"
+    ),
+    "SpoofModelScale2.7" to Pair(
+        "https://huggingface.co/shubhxm0204/facenet-executorch/resolve/main/spoof_model_scale_2_7.tflite",
+        "spoof_model_scale_2_7.tflite"
+    ),
+    "SpoofModelScale4.0" to Pair(
+        "https://huggingface.co/shubhxm0204/facenet-executorch/resolve/main/spoof_model_scale_4_0.tflite",
+        "spoof_model_scale_4_0.tflite"
+    )
+)
+
+models.forEach { (name, info) ->
+    val (url, fileName) = info
+    val taskName = "download$name"
+
+    tasks.register(taskName) {
+        description = "Download model $fileName from HF"
+        val targetFile = file("src/main/assets/$fileName")
+        outputs.file(targetFile)
+
+        doLast {
+            if (!targetFile.exists()) {
+                println("Downloading $name from $url...")
+                targetFile.parentFile.mkdirs()
+                ant.invokeMethod("get", mapOf("src" to url, "dest" to targetFile))
+            }
         }
     }
-}
 
-tasks.named("preBuild") {
-    dependsOn("downloadModel")
+    tasks.named("preBuild") {
+        dependsOn(taskName)
+    }
 }
