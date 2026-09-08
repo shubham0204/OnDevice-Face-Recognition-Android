@@ -20,8 +20,12 @@ class DetectScreenViewModel(
     private val CAMERA_FACING_VALUE_BACK = "back"
     private val CAMERA_FACING_VALUE_FRONT = "front"
 
+    val RECOGNITION_MODE_REALTIME = 1
+    val RECOGNITION_MODE_IMAGE = 2
+
     val faceDetectionMetricsState = mutableStateOf<RecognitionMetrics?>(null)
     val cameraFacing = mutableIntStateOf(getCameraFacing())
+    val recognitionMode = mutableIntStateOf(RECOGNITION_MODE_REALTIME)
 
     fun getNumPeople(): Long = personUseCase.getCount()
 
@@ -52,5 +56,14 @@ class DetectScreenViewModel(
             cameraFacing.intValue = CameraSelector.LENS_FACING_FRONT
         }
         saveCameraFacingSetting(cameraFacing.intValue)
+    }
+
+    fun switchRecognitionMode() {
+        if (recognitionMode.intValue == RECOGNITION_MODE_REALTIME) {
+            recognitionMode.intValue = RECOGNITION_MODE_IMAGE
+        } else {
+            recognitionMode.intValue = RECOGNITION_MODE_REALTIME
+        }
+
     }
 }

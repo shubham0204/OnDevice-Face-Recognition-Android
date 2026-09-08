@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cameraswitch
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -89,6 +90,14 @@ fun DetectScreen(onOpenFaceListClick: (() -> Unit)) {
                                 contentDescription = "Switch Camera",
                             )
                         }
+                        IconButton(
+                            onClick = {}
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Photo,
+                                contentDescription = "Switch to Image Mode"
+                            )
+                        }
                     },
                 )
             },
@@ -115,10 +124,7 @@ private fun ScreenUI(viewModel: DetectScreenViewModel) {
                 metrics?.let {
                     Text(
                         text =
-                            "face detection: ${it.timeFaceDetection} ms" +
-                                "\nface embedding: ${it.timeFaceEmbedding} ms" +
-                                "\nvector search: ${it.timeVectorSearch} ms\n" +
-                                "spoof detection: ${it.timeFaceSpoofDetection} ms",
+                            "inference: ${it.timeInference} ms",
                         color = Color.White,
                         modifier =
                             Modifier

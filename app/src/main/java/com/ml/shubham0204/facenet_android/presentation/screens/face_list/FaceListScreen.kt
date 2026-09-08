@@ -81,7 +81,7 @@ fun FaceListScreen(
 @Composable
 private fun ScreenUI(viewModel: FaceListScreenViewModel) {
     val faces by viewModel.personFlow.collectAsState(emptyList())
-    LazyColumn { items(faces) { FaceListItem(it) { viewModel.removeFace(it.personID) } } }
+    LazyColumn { items(faces) { FaceListItem(it) { viewModel.removeFace(it.personName) } } }
 }
 
 @Composable

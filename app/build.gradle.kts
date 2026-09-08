@@ -13,12 +13,16 @@ android {
         applicationId = "com.ml.shubham0204.facenet_android"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.0.1"
+        versionCode = 3
+        versionName = "3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
+        }
+
+        ndk {
+            abiFilters.add("arm64-v8a")
         }
     }
 
@@ -82,18 +86,16 @@ dependencies {
     implementation(libs.androidx.compose.navigation)
     implementation(libs.androidx.ui.text.google.fonts)
 
-    // ObjectBox - vector database
-    debugImplementation("io.objectbox:objectbox-android-objectbrowser:5.4.2")
-    releaseImplementation("io.objectbox:objectbox-android:5.4.2")
+    val roomVersion = "2.8.4"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    ksp("androidx.room:room-compiler:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
 
     // dependency injection
     implementation(libs.koin.android)
     implementation(libs.koin.annotations)
     implementation(libs.koin.androidx.compose)
     ksp(libs.koin.ksp.compiler)
-
-    // ExecuTorch
-    implementation("org.pytorch:executorch-android:1.2.0")
 
     // LiteRT
     implementation(libs.tensorflow.lite)
@@ -114,28 +116,44 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
 
-    // MLKit Face Detection
-    implementation("com.google.mlkit:face-detection:16.1.7")
-
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
 
-apply(plugin = "io.objectbox")
+val models = listOf(
+    "FaceNet512Quantized" to Pair(
+        "https://huggingface.co/shubhxm0204/facenet-executorch/resolve/main/vggface2-inception-resnetv1-xnnpack-int4",
+        "qmodel.pte"
+    ),
+    "SpoofModelScale2.7" to Pair(
+        "https://huggingface.co/shubhxm0204/facenet-executorch/resolve/main/spoof_model_scale_2_7.tflite",
+        "spoof_model_scale_2_7.tflite"
+    ),
+    "SpoofModelScale4.0" to Pair(
+        "https://huggingface.co/shubhxm0204/facenet-executorch/resolve/main/spoof_model_scale_4_0.tflite",
+        "spoof_model_scale_4_0.tflite"
+    )
+)
 
-tasks.register("downloadModel") {
-    val modelUrl = "https://huggingface.co/shubhxm0204/facenet-executorch/resolve/main/vggface2-inception-resnetv1-xnnpack-fp32"
-    val targetFile = file("src/main/assets/model.pte")
-    outputs.file(targetFile)
-    doLast {
-        if (!targetFile.exists()) {
-            println("Downloading model from $modelUrl...")
-            targetFile.parentFile.mkdirs()
-            ant.invokeMethod("get", mapOf("src" to modelUrl, "dest" to targetFile))
+models.forEach { (name, info) ->
+    val (url, fileName) = info
+    val taskName = "download$name"
+
+    tasks.register(taskName) {
+        description = "Download model $fileName from HF"
+        val targetFile = file("src/main/assets/$fileName")
+        outputs.file(targetFile)
+
+        doLast {
+            if (!targetFile.exists()) {
+                println("Downloading $name from $url...")
+                targetFile.parentFile.mkdirs()
+                ant.invokeMethod("get", mapOf("src" to url, "dest" to targetFile))
+            }
         }
     }
-}
 
-tasks.named("preBuild") {
-    dependsOn("downloadModel")
+    tasks.named("preBuild") {
+        dependsOn(taskName)
+    }
 }

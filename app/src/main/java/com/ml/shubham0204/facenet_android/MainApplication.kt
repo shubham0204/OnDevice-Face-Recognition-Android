@@ -1,7 +1,6 @@
 package com.ml.shubham0204.facenet_android
 
 import android.app.Application
-import com.ml.shubham0204.facenet_android.data.ObjectBoxStore
 import com.ml.shubham0204.facenet_android.di.AppModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -14,6 +13,5 @@ class MainApplication : Application() {
             androidContext(this@MainApplication)
             modules(AppModule().module)
         }
-        ObjectBoxStore.init(this)
     }
 }
